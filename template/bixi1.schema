@@ -1,0 +1,17 @@
+{   "name": "bixi.1",
+	"families":[
+	{
+	  "name":"f",
+	  "compression":"",
+	  "versions":"",
+	  "min_versions":"",
+	  "blocksize":"",
+	  "in_memory":"",
+	  "blockcache":"",
+	  "bloomfilter":"",
+	  "replication_scope":""	  
+	}
+	],
+	"max_file_size":"",
+	"mem_store_size":""
+}
