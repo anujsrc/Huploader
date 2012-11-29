@@ -8,6 +8,7 @@ import java.util.Hashtable;
 import com.preprocessor.bixi.BixiTransformer;
 import com.preprocessor.cosmo.CosmoTransformer;
 import com.util.XConstants;
+import com.util.XParser;
 
 
 /**
@@ -54,7 +55,6 @@ public abstract class Transformer {
 	protected Hashtable<String, String> item_set = null;
 	
 	public Transformer(){
-		item_set = new Hashtable<String,String>();
 	}
 	
 	/**
@@ -66,7 +66,7 @@ public abstract class Transformer {
 	 */
 	public void execute(String inputDir, String fileSuffix, String template, String outDir){
 		
-		this.getTemplate(template);
+		this.item_set = XParser.getTemplateDesc(template);
 		
 		File in_directory = new File(inputDir);
 		File out_directory = new File(outDir);
@@ -89,25 +89,7 @@ public abstract class Transformer {
 	}		
 	
 	
-	private Hashtable<String, String>  getTemplate(String template_file){
-		
-		try{
-			File file = new File(template_file);
-			if(file.exists()){				
-				FileReader reader = new FileReader(file);
-				BufferedReader br = new BufferedReader(reader);
-				String line = br.readLine();
-				String[] items = line.split(",");
-				for(int i=0;i<items.length;i++){
-					item_set.put(items[i], "");
-				}
-			}
-			
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		return item_set;
-	}	
+	
 	
 	
 	

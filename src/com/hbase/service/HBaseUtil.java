@@ -42,6 +42,8 @@ import org.apache.hadoop.hbase.util.MetaUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import com.util.XHBaseConstant;
+
 
 public class HBaseUtil {
 

@@ -49,5 +49,5 @@ MYCONF=${PWD}/../conf/
 
 # jar file which is used to preprocess the files
 
-${JAVA_HOME}/bin/java -Xmx1500m -classpath ${COMMONLIB}:${HBASELIB}:${HBASECONF}:${HADOOPLIB}:${HADOOPCONF}:${MYLIB}:${MYCONF}  com.hbase.client.CreateHBaseTable $* 
+${JAVA_HOME}/bin/java -Xmx1500m -classpath ${COMMONLIB}:${HBASELIB}:${HBASECONF}:${HADOOPLIB}:${HADOOPCONF}:${MYLIB}:${MYCONF}  com.hbase.creatTB.CreateHBaseTable $* 
 

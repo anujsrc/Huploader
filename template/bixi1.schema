@@ -13,5 +13,13 @@
 	}
 	],
 	"max_file_size":"",
-	"mem_store_size":""
+	"mem_store_size":"",
+	
+	"schema":{
+		"space":"0,0,100,100",
+		"indexing":"0",
+		"encoding":"0",
+		"subspace":"1"
+	}
+
 }

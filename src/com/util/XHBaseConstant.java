@@ -1,4 +1,4 @@
-package com.hbase.service;
+package com.util;
 
 public class XHBaseConstant {
 	
@@ -15,6 +15,13 @@ public class XHBaseConstant {
 	public static String TABLE_DESC_REPLICATIONSCOPE = "replication_scope";
 	public static String TABLE_DESC_MEM_STORE_SIZE = "mem_store_size";
 	public static String TABLE_DESC_MAX_FILE_SIZE = "max_file_size";
+	
+	public static String TABLE_DESC_SCHEMA = "schema";
+	public static String TABLE_DESC_SPACE = "space";
+	public static String TABLE_DESC_INDEXING = "indexing";
+	public static String TABLE_DESC_ENCODING = "encoding";
+	public static String TABLE_DESC_SUBSPACE = "subspace";
+	
 	
 	
 }

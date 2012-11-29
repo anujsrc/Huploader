@@ -1,4 +1,4 @@
-package com.hbase.client;
+package com.hbase.creatTB;
 
 import java.io.File;
 import java.io.FileReader;
@@ -8,6 +8,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.hbase.service.HBaseUtil;
+import com.util.XParser;
 
 
 /**
@@ -28,35 +29,9 @@ public class CreateHBaseTable {
 	
 	
 	public boolean createTable(String schemaFile){
-		JSONObject table = this.getTableDescription(schemaFile);
+		JSONObject table = XParser.getTableDescription(schemaFile);
 		return hbase_service.createTable(table);
-	}
-		
-	/**
-	 * get the table description from the file and return a JSONObject
-	 * @param schemaFile
-	 * @return
-	 */
-	private JSONObject getTableDescription(String schemaFile){		
-		try{		
-			File file = new File(schemaFile);
-			if(file.exists()){
-				
-				FileReader fr = new FileReader(file);
-				JSONParser parser = new JSONParser();
-				JSONObject obj = (JSONObject)parser.parse(fr);							
-				
-				return obj;
-				
-			}else{
-				System.out.println("file not exist");
-			}
-			
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		return null;
-	}
+	}		
 		
 	
 	public static void main(String[] args){
