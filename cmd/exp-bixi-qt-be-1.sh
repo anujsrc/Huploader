@@ -34,8 +34,8 @@ for j in {1..1}; do
 echo "********$j Times*********************************************************\n"
 
 for i in $short; do
-echo "**********$i****************"
-${myDir}/query-from-hbase.sh ../schema/bixi.qt.be.1.schema ../csv/bixi.conf ../conf/ 0 1 $i
+echo "********scan **$i****************"
+${myDir}/query-from-hbase.sh ../schema/bixi.qt.be.1.schema ../csv/bixi.conf ../conf/ 0 0 $i
 done
 
 for ii in $short; do

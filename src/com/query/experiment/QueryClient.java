@@ -3,6 +3,7 @@ package com.query.experiment;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Properties;
 
 import com.query.QueryAbstraction;
@@ -107,7 +108,8 @@ public class QueryClient {
 		Double latitude = Double.parseDouble(args[0]);
 		Double longitude = Double.parseDouble(args[1]);
 		Double radius = Double.parseDouble(args[2]);
-		this.queryEngine.scanQueryAvailableNear("", latitude, longitude, radius);					
+		HashMap<String,String> result = this.queryEngine.scanQueryAvailableNear("", latitude, longitude, radius);
+		//System.out.println(result.toString());
 	}
 	
 	private void callCopQueryAvailable(String propertyName){

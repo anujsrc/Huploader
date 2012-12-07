@@ -61,18 +61,15 @@ public class BixiTransformer extends Transformer{
 		boolean[] indicator = null;
 		String[] values = null;
 		
-		public MyHandler(Hashtable<String,String> item_sets,String outputFile){			
-			int len = item_sets.keySet().size();
+		public MyHandler(String[] item_sets,String outputFile){			
+			int len = item_sets.length;
 			keys = new String[len];
 			indicator = new boolean[len];
-			values = new String[len];
-			int index = 0;
-			Iterator<String> items = item_sets.keySet().iterator();
-			while(items.hasNext()){
-				keys[index] = items.next();
-				indicator[index] = false;
-				values[index] = null;
-				index++;
+			values = new String[len];			
+			for(int i=0;i<item_sets.length;i++){
+				keys[i] = item_sets[i];
+				indicator[i] = false;
+				values[i] = null;				
 			}
 			// open the write file
 			try{

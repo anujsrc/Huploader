@@ -1,8 +1,6 @@
 package com.preprocessor;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.util.Hashtable;
 
 import com.preprocessor.bixi.BixiTransformer;
@@ -52,7 +50,7 @@ public abstract class Transformer {
 	protected abstract void parse(String inFile,String outFile);
 	
 	// This represents the attributes in the raw file
-	protected Hashtable<String, String> item_set = null;
+	protected String[] item_set = null;
 	
 	public Transformer(){
 	}
@@ -64,9 +62,9 @@ public abstract class Transformer {
 	 * @param template
 	 * @param outDir
 	 */
-	public void execute(String inputDir, String fileSuffix, String template, String outDir){
+	public void execute(String inputDir, String fileSuffix, String csv_desc_file, String outDir){
 		
-		this.item_set = XParser.getTemplateDesc(template);
+		this.item_set = XParser.getTemplateDescAsArray(csv_desc_file);
 		
 		File in_directory = new File(inputDir);
 		File out_directory = new File(outDir);
