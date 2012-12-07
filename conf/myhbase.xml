@@ -30,5 +30,18 @@
 </property>
 
 
+<property>
+<name>hbase.client.write.buffer</name>
+<value>12582912</value>
+<description> 12*1024*1024 For writing data into hbase</description>
+</property>
+
+<property>
+<name>hbase.block.cache.size</name>
+<value>5000</value>
+<description>number of rows during query</description>
+</property>
+
+
 
 </configuration>

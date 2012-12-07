@@ -5,7 +5,7 @@
 
 
 # use the command to upload the data into HDFS
-USAGE="<input directory> <format 0:bixi 1: cosmology> <template file name> <output directory>"
+USAGE="<input directory> <format 0:bixi 1: cosmology> <csv desc file> <output directory>"
 if [ -z "$1" ]; then
 	echo "$USAGE"
 	exit -1

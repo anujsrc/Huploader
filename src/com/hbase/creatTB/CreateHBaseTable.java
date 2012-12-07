@@ -30,7 +30,13 @@ public class CreateHBaseTable {
 	
 	public boolean createTable(String schemaFile){
 		JSONObject table = XParser.getTableDescription(schemaFile);
-		return hbase_service.createTable(table);
+		if(table != null)
+			return hbase_service.createTable(table);
+		else{
+			System.out.println("jsonobject table is null");
+			return false;
+		}
+				
 	}		
 		
 	

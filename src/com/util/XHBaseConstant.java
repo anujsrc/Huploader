@@ -22,6 +22,7 @@ public class XHBaseConstant {
 	public static String TABLE_DESC_ENCODING = "encoding";
 	public static String TABLE_DESC_SUBSPACE = "subspace";
 	
+	public static String TABLE_DESC_LOG_NAME_PREFIX = "log_file_name";
 	
 	
 }

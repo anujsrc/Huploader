@@ -75,11 +75,12 @@ public abstract class Transformer {
 				out_directory.createNewFile();
 			if(in_directory.exists()){			
 				File[] files = in_directory.listFiles();
-				
-				for(int i =0;i<files.length;i++){
+				System.out.println("the total number: "+files.length);
+				for(int i = 0;i<files.length;i++){
 					String name = files[i].getName();
-					if(name.contains(fileSuffix)){
-						this.parse(in_directory.getAbsolutePath()+"/"+name,out_directory.getAbsolutePath()+"/"+name+".csv");	
+					if(name.contains(fileSuffix)){						
+						System.out.println("start transform file Number: "+i);
+						this.parse(in_directory.getAbsolutePath()+"/"+name,out_directory.getAbsolutePath()+"/"+name+".csv");						
 					}									
 				}
 			}	

@@ -1,0 +1,24 @@
+{   "name": "bixi.qt.be.1",
+	"families":[
+	{
+	  "name":"f",
+	  "compression":"GZ", 
+	  "versions":"1", // This is very important when you are using 3rd dimension
+	  "min_versions":"1",
+	  "blocksize":"",
+	  "in_memory":"",
+	  "blockcache":"true",
+	  "bloomfilter":"", // three option: ROW, COL, ROWCOL
+	  "replication_scope":""	  
+	}
+	],
+	"max_file_size":"",
+	"mem_store_size":"",	
+	
+	"schema":{ // This is for the table schema
+		"space":"0,0,100,100", // x-top-left, y-top-left, x-bottom-right, y-bottom-right
+		"indexing":"0", // 0: quad tree, 1: raster
+		"encoding":"0", // 0: binary encoding, 1: decimal encoding
+		"subspace":"1"  // subspace size
+	}
+}

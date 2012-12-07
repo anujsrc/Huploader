@@ -28,7 +28,7 @@ public class XParser {
 				return obj;
 				
 			}else{
-				System.out.println("file not exist");
+				System.out.println(schemaFile+" does not exist");
 			}
 			
 		}catch(Exception e){
@@ -36,7 +36,11 @@ public class XParser {
 		}
 		return null;
 	}
-	
+	/**
+	 * The template of the csv
+	 * @param template_file
+	 * @return headers in csv and the type of each item
+	 */
 	public static Hashtable<String, String> getTemplateDesc(String template_file){
 		Hashtable<String,String> item_set = null;
 		try{
@@ -48,8 +52,11 @@ public class XParser {
 				String line = br.readLine();
 				String[] items = line.split(",");
 				for(int i=0;i<items.length;i++){
-					item_set.put(items[i], "");
+					String pair[] = items[i].split("=>");
+					item_set.put(pair[0], pair[1]);
 				}
+			}else{
+				System.out.println(template_file+" does not exist");
 			}
 				
 		}catch(Exception e){
@@ -58,7 +65,7 @@ public class XParser {
 		return item_set;
 	}
 	
-	public static ArrayList<String> getTemplateDescAsArray(String template_file){
+	public static String[] getTemplateDescAsArray(String template_file){
 		ArrayList<String> item_set = null;
 		try{
 			File file = new File(template_file);
@@ -69,14 +76,21 @@ public class XParser {
 				String line = br.readLine();
 				String[] items = line.split(",");
 				for(int i=0;i<items.length;i++){
-					item_set.add(items[i]);
+					String pair[] = items[i].split("=>");
+					item_set.add(pair[0]);
 				}
+			}else{
+				System.out.println(template_file+" does not exist");
 			}
 				
+			String[] items = item_set.toArray(new String[item_set.size()]);
+			return items;
+			
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-		return item_set;
+		
+		return null;
 	}	
 
 }

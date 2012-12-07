@@ -51,7 +51,7 @@ public class HBaseUtil {
 	private Configuration conf = null;
 	private HBaseAdmin admin = null;
 	private HTable table = null;
-	private int cacheSize = 5000;
+	private int cacheSize = -1;
 	private boolean blockCached = true;
 	private HashMap<String,HRegionInfo> regions = null;
 	
@@ -60,17 +60,10 @@ public class HBaseUtil {
 			
 			this.conf = HBaseConfiguration.create();
 			this.conf = this.loadCustomizedConf(confPath);
-						
-			
-/*			this.conf.set("hbase.zookeeper.property.clientPort","2181");
-			this.conf.set("hbase.client.pause", "20");
-			this.conf.set("hbase.client.retries.number", "11");
-			this.conf.set("hbase.ipc.client.tcpnodelay","true");
-			//this.conf.set("ipc.ping.interval", "60000"); // 1min
-			//this.conf.set("ipc.socket.timeout", "300000"); // 
-*/			
+								
+			System.out.println("cache size : "+cacheSize);
 			System.out.println("retries number: "+this.conf.get("hbase.client.retries.number"));
-			System.out.println("pause: "+this.conf.get("hbase.client.pause"));
+			System.out.println("pause: "+this.conf.get("hbase.client.pause"));			
 			
 			this.admin = new HBaseAdmin(this.conf);
 			regions = new HashMap<String,HRegionInfo>();
@@ -112,6 +105,7 @@ public class HBaseUtil {
 	public void setScanConfig(int cacheSize,boolean blockCache){
 		this.cacheSize = cacheSize;
 		this.blockCached = blockCache;
+		System.out.println("in setScanConfig set the scan cache : "+ cacheSize);
 	}
 
 	public HashMap<String,HRegionInfo> getRegions(String tablename){
@@ -230,11 +224,29 @@ public class HBaseUtil {
 		
 	}
 	
+	public Put constructRow(String rowKey,String family, String[] qualifiers, long ts,String[] values) throws Exception{
+		if(table == null)
+			throw new Exception("!!!!!!!!!!! No table handler");
+		
+		Put put = new Put(rowKey.getBytes());
+		put.setWriteToWAL(false);
+		for(int i=0;i<qualifiers.length;i++){
+			if(ts >= 0){
+				put.add(family.getBytes(), qualifiers[i].getBytes(), ts, values[i].getBytes());
+			}else{
+				put.add(family.getBytes(), qualifiers[i].getBytes(),values[i].getBytes());
+			}			
+		}		
+		
+		return put;
+		
+	}	
+	
 	public void flushBufferedRow(ArrayList<Put> putList)throws Exception{
 		long start = System.currentTimeMillis();
 		try{			
 			table.setAutoFlush(false);
-			table.setWriteBufferSize(1024*1024*12);
+			//table.setWriteBufferSize(1024*1024*12);
 			table.put(putList);	
 			table.setAutoFlush(true);			
 			System.out.println("flushrow=> "+putList.size()+";exe time=>"+(System.currentTimeMillis()-start));	

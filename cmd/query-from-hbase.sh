@@ -5,8 +5,8 @@
 
 
 # use the command to upload the data into HDFS
-USAGE="<the table schema desc file, e.g. xx.schema> <hbase configuration file or directory>"
-if [ -z "$1" ] && [ -z "$2" ]; then
+USAGE="<schema_desc_file> <csv_desc_file> <hbase_conf_folder> <query(0:within,1:point,2:knn)> <cop/scan(0:scan,1:cop)> <property name>"
+if [ -z "$1" ] && [ -z "$2" ] && [ -z "$3" ] && [ -z "$4" ]; then
 	echo "$USAGE"
 	exit -1
 fi
@@ -35,6 +35,7 @@ ${HBASE_HOME}/lib/zookeeper-3.4.3.jar:\
 ${HBASE_HOME}/lib/slf4j-api-1.4.3.jar:\
 ${HBASE_HOME}/lib/slf4j-log4j12-1.4.3.jar:\
 ${HBASE_HOME}/lib/protobuf-java-2.4.0a.jar:\
+${HBASE_HOME}/lib/commons-cli-1.2.jar:\
 ${PWD}/../lib/json-simple-1.1.1.jar
 
 HBASELIB=${HBASE_HOME}/hbase-0.94.1-security.jar
@@ -43,11 +44,12 @@ HBASECONF=${HBASE_HOME}/conf
 HADOOPLIB=${HADOOP_HOME}/hadoop-core-1.0.3.jar
 HADOOPCONF=${HADOOP_HOME}/conf
 
+MAPRLIB=${HADOOP_HOME}/lib/jackson-core-asl-1.8.8.jar:\
+${HADOOP_HOME}/lib/jackson-mapper-asl-1.8.8.jar
+
 
 MYLIB=${PWD}/../bin/huploader.jar
 MYCONF=${PWD}/../conf/
 
-# jar file which is used to preprocess the files
-
-${JAVA_HOME}/bin/java -Xmx1500m -classpath ${COMMONLIB}:${HBASELIB}:${HBASECONF}:${HADOOPLIB}:${HADOOPCONF}:${MYLIB}:${MYCONF}  com.hbase.creatTB.CreateHBaseTable $* 
+${JAVA_HOME}/bin/java -Xmx1500m -classpath ${COMMONLIB}:${HADOOPLIB}:${HADOOPCONF}:${HBASELIB}:${HBASECONF}:${MAPRLIB}:${MYLIB}:${MYCONF}   com.query.experiment.QueryClient $*
 

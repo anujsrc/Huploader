@@ -1,8 +1,5 @@
 package com.preprocessor.bixi;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -35,39 +32,6 @@ public class BixiTransformer extends Transformer{
 			e.printStackTrace();
 		}		
 	}
-	
-/*	*//**
-	 * 
-	 * @param inputDir
-	 * @param format
-	 * @param template
-	 * @param outDir
-	 *//*
-	public void execute(String inputDir, int format, String template, String outDir){
-		
-		
-		this.getTemplate(template);
-		
-		File in_directory = new File(inputDir);
-		File out_directory = new File(outDir);
-		try{
-			if(!out_directory.exists())
-				out_directory.createNewFile();
-			if(in_directory.exists()){			
-				File[] files = in_directory.listFiles();
-				
-				for(int i =0;i<files.length;i++){
-					String name = files[i].getName();
-					if(name.contains(".xml")){
-						this.parseXML(in_directory.getAbsolutePath()+"/"+name,out_directory.getAbsolutePath()+"/"+name+".csv");	
-					}									
-				}
-			}	
-		}catch(Exception e){
-			e.printStackTrace();
-		}				
-	}*/
-	
 
 	
 	/**
@@ -90,7 +54,7 @@ public class BixiTransformer extends Transformer{
 
 	class MyHandler extends DefaultHandler{
 				
-		int count = 0;
+		int count = 0;		
 			
 		FileWriter writer = null;
 		String[] keys = null;
@@ -152,11 +116,11 @@ public class BixiTransformer extends Transformer{
 		}else if (qName.equalsIgnoreCase("stations")){
 			// close the file
 			try{
-				this.writer.close();
+				this.writer.close();				
 			}catch(Exception e){
 				e.printStackTrace();
 			}
-			System.out.println("insert number: "+count);
+			System.out.println("num_in_file=>"+count);
 		}
 	}
 	
