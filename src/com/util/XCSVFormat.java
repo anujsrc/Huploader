@@ -1,9 +1,12 @@
 package com.util;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
-public class XCSVFormat {
+public class XCSVFormat implements Serializable{	
+	
+	private static final long serialVersionUID = 1L;
 	
 	String[] columns = null;
 	String[] types = null;

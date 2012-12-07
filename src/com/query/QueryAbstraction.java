@@ -204,7 +204,7 @@ public abstract class QueryAbstraction {
 		}else if(n == 1){			
 			this.copLog = new XLogCSV((this.logFilePrefix + "-cop.csv"),XLogConst.cop_header);
 		}else if(n == 2){			
-			this.timeLog = new XLogCSV((this.logFilePrefix += "-time.csv"),XLogConst.time_header);
+			this.timeLog = new XLogCSV((this.logFilePrefix + "-time.csv"),XLogConst.time_header);
 		}
 		
 	}

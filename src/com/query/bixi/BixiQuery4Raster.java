@@ -36,8 +36,7 @@ public class BixiQuery4Raster extends QueryAbstraction{
 			final double latitude, final double longitude, final double radius) {	
 		try {					
 			this.getCSVLog(0);
-			this.getCSVLog(1);
-			this.getCSVLog(2);
+			this.getCSVLog(1);			
 			this.timePhase.clear();			
 			/** Step1** Call back class definition **/
 			class BixiCallBack implements Batch.Callback<RCopResult> {
