@@ -71,8 +71,13 @@ public class CSVDataUploader {
 		
 		CSVDataUploader uploader = new CSVDataUploader(csv_desc_file,schema_desc_file,hbaseConf);
 		System.out.println("***** Start to upload the data*********");
-		uploader.upload(input_dir, batchNum);
-		System.out.println("***** Finish all files**********");
+		try{
+			uploader.upload(input_dir, batchNum);	
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		System.out.println("***** Finish uploading all files**********");
 		
 	}	
 	
@@ -138,7 +143,7 @@ public class CSVDataUploader {
 	private int id_index = -1; 
 	
 	private void locateKeyIndicator(){
-		
+		System.out.println("start to locate the key indicator");
 		String[] columns = this.csvFormat.getColumns();
 		for(int i=0;i<columns.length;i++){
 			if(columns[i].equals("lat")){
@@ -153,17 +158,21 @@ public class CSVDataUploader {
 			if(lan_index > 0 && long_index > 0 && id_index > 0){
 				break;
 			}
-		}				
+		}
+		
+		System.out.println("id=>"+id_index+";lan=>"+lan_index+";long=>"+long_index);
 	}
 	
 	/*
 	 * workflow of this function: 1 read the csv data, and put into hbase, then close hbase
 	 */
-	public void upload(String input_dir, int batchNum) {
+	public void upload(String input_dir, int batchNum) throws Exception{
 		// read the file,
 		File dir = new File(input_dir);
-		if (!dir.isDirectory())
-			System.exit(1);
+		if (!dir.isDirectory()){
+			throw new Exception("there is no this input directory!");			
+		}
+			
 
 		String[] fileNames = dir.list();
 
@@ -294,7 +303,7 @@ public class CSVDataUploader {
 			String[] columns = this.csvFormat.getColumns();
 			if(columns.length != values.length)
 			{
-				System.out.println("the value and colum does not match");
+				System.out.println("the value and colum does not match"+values[0]);
 				return null;
 			}
 			
