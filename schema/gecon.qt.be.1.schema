@@ -1,0 +1,28 @@
+{   "name": "gecon.qt.be.1",
+	"families":[
+	{
+	  "name":"f",
+	  "compression":"GZ",
+	  "versions":"1",
+	  "min_versions":"1",
+	  "blocksize":"",
+	  "in_memory":"",
+	  "blockcache":"true",
+	  "bloomfilter":"",
+	  "replication_scope":""	  
+	}
+	],
+	"max_file_size":"",
+	"mem_store_size":"",
+	
+	"schema":{
+		"space":"-90,-180,180,360",
+		"offset":"90,180",
+		"indexing":"0",
+		"encoding":"0",
+		"subspace":"1"
+	},
+	
+	"log_file_name":"bixi-qt-be-1"
+
+}

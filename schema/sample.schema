@@ -16,7 +16,7 @@
 	"mem_store_size":"",	
 	
 	"schema":{ // This is for the table schema
-		"space":"0,0,100,100", // x-top-left, y-top-left, x-bottom-right, y-bottom-right
+		"space":"0,0,100,100", // x-left-bottom, y-left-bottom, width,height
 		"indexing":"0", // 0: quad tree, 1: raster
 		"encoding":"0", // 0: binary encoding, 1: decimal encoding
 		"subspace":"1"  // subspace size

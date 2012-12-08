@@ -1,5 +1,6 @@
 package com.util.raster;
 
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -21,15 +22,20 @@ public class XRaster {
     private double min_size_of_width = 1;
         
     
-    private Rectangle2D.Double m_rect;            // The area this QuadTree represents
+    private Rectangle2D.Double m_rect = null;            // The area this QuadTree represents
     private ArrayList<XBox> m_boxes = null;
     private DecimalFormat IndexKeyFormatter = null;
     private DecimalFormat IndexColumnFormatter = null;
+    private Point2D.Double offset = null;
     
-    public XRaster(Rectangle2D.Double rect, double min_size_of_height){
-    	rect.x = Math.abs(rect.x);
-    	rect.y = Math.abs(rect.y);
-    	this.m_rect = rect;
+    public XRaster(Rectangle2D.Double rect, double min_size_of_height,Point2D.Double offsetPoint){
+    	if(offsetPoint != null){
+    		this.offset = new Point2D.Double(offsetPoint.x,offsetPoint.y);   
+    		this.m_rect = new Rectangle2D.Double((rect.x + offsetPoint.x),(rect.y + offsetPoint.y),rect.width,rect.height);
+    	}else{       	
+        	this.m_rect = new Rectangle2D.Double(rect.x,rect.y,rect.width,rect.height);    	
+    	}
+    	
     	this.min_size_of_height = min_size_of_height;
     	this.min_size_of_width = min_size_of_height;    	
     	this.m_boxes = new ArrayList<XBox>();
@@ -37,21 +43,46 @@ public class XRaster {
     	int num_of_row = (int) (this.m_rect.getHeight() / this.min_size_of_height); 	
     	
     	IndexKeyFormatter = this.getKeyFormatter(num_of_row);   
-    	IndexColumnFormatter = this.getKeyFormatter((int)(m_rect.getWidth() / min_size_of_height));
+    	IndexColumnFormatter = this.getKeyFormatter((int)(m_rect.getWidth() / min_size_of_width));
     }
     
+    
     /**
-     * Determine the subspace which the point belongs to.
+     * This is because the space is normalized, so the point should be normalized as well.
+     * @return
+     */
+    private double[] normalize(double x, double y){
+    	double[] result = new double[]{x,y};
+    	if(this.offset != null){
+    		result[0] += this.offset.x;
+    		result[1] += this.offset.y;
+    	}
+    	return result; 
+    }    
+    /**
+     * To Determine the subspace which the point belongs to. The point here is for the original point.
      * It is used to get the point's index
      * @param x
      * @param y
      * @return Box, it indicates the row and column this point belongs to and the number of objects the box has already
      */  
     public XBox locate(double x, double y) {
-    	x = Math.abs(x);
-    	y = Math.abs(y);
+    	double[] normalized = this.normalize(x, y);  
+    	System.out.println("normalized: "+normalized[0]+";"+normalized[1]);
+    	XBox box = this.intervalLocate(normalized[0], normalized[1]);
+    	return box;
+    }
+    /**
+     * This is for locating the index for the point within the normailzed space 
+     * @param x
+     * @param y
+     * @return
+     */
+    private XBox intervalLocate(double x, double y){
+    	
     	if(x>this.m_rect.getMaxX() || x<this.m_rect.getMinX() || y>this.m_rect.getMaxY() || y<this.m_rect.getMinY())
     		return new XBox(null,null);
+    	System.out.println("interval locate: "+this.m_rect.getX() + ";"+this.m_rect.getY()+";"+this.m_rect.getWidth() + ";"+this.m_rect.getHeight());
     	
     	int row = (int) ((y-this.m_rect.getY()) / this.min_size_of_height );   	
     	int column = (int)((x - this.m_rect.getX()) / this.min_size_of_width );  		
@@ -65,9 +96,14 @@ public class XRaster {
     	} 
     	
     	XBox box = new XBox(this.IndexKeyFormatter.format(row),this.IndexColumnFormatter.format(column));
-    	return box;
+    	return box;    	
     }
-    
+    /**
+     * This is used during uploading, the point here is the original point.
+     * @param x
+     * @param y
+     * @return
+     */
     public XBox addPoint(double x, double y){
     	XBox box = this.locate(x, y);
     	box.addObject();
@@ -75,17 +111,19 @@ public class XRaster {
     	return box;
     }
     
-    public XBox[] match(double x, double y,double radius){
-    	x = Math.abs(x);
-    	y = Math.abs(y);
+    public XBox[] match(double x, double y,double radius){    
+    	double[] normalized = this.normalize(x, y);
+    	x = normalized[0];
+    	y = normalized[1];
+    	
     	double minX = (m_rect.getMinX()<(x-radius))? (x-radius):m_rect.getMinX(); 
     	double minY = (m_rect.getMinY()<(y-radius))? (y-radius):m_rect.getMinY(); 
     	double maxX = (m_rect.getMaxX()>(x+radius))? (x+radius):m_rect.getMaxX();
     	double maxY = (m_rect.getMaxY()>(y+radius))? (y+radius):m_rect.getMaxY();
     	System.out.println("bounder: ("+minX+","+minY+")("+maxX+","+maxY+")");
     	
-    	XBox tl = this.locate(minX, minY);    	
-    	XBox br = this.locate(maxX, maxY);    	
+    	XBox tl = this.intervalLocate(minX, minY);    	
+    	XBox br = this.intervalLocate(maxX, maxY);    	
     	return new XBox[]{tl,br};    	   	
     }
     
@@ -138,8 +176,10 @@ public class XRaster {
     	double br_y = this.m_rect.getY()+(num_of_row-1)*this.min_size_of_height;    
     	msg = "row=>"+num_of_row+
     				  ";column=>" + num_of_column+
-    				  ";br_x=>"+br_x+
-    				  ";br_y=>"+br_y;
+    				  ";lt_x=>" + this.m_rect.getX()+
+    				  ";lt_y=>" + this.m_rect.getY()+
+    				  ";rb_x=>"+br_x+
+    				  ";rb_y=>"+br_y;
     	for(XBox box:m_boxes){
     		//msg += box.toString()+"\n";
     	}

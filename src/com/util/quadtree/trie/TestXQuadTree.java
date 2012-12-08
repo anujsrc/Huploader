@@ -1,6 +1,7 @@
 package com.util.quadtree.trie;
 
 
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.List;
 
@@ -11,35 +12,37 @@ public class TestXQuadTree {
 
     public static void main(String args[]){
     	
-    	
+    	Point2D.Double offset = new Point2D.Double(90,180);
     	Rectangle2D.Double rect = new Rectangle2D.Double(
-   			 0,0,100,100);
+   			 -90,-180,180,360);
    	
-    	XQuadTree tree = new XQuadTree(rect,0.1);
+    	XQuadTree tree = new XQuadTree(rect,10,offset);
     	tree.buildTree(XConstants.ENCODING_BINARY);
     	//tree.print();
-    	
-    	XQuadTree decimalTree = new XQuadTree(rect,0.1);
-    	decimalTree.buildTree(XConstants.ENCODING_DECIMAL);
-    	//decimalTree.print();
-    	
-    	
-       	List<String> result = tree.match(31.653,40.74789,1,1);
+    	   	
+       	List<String> result = tree.match(-89,120,1,1);
     	System.out.println(result.size()+"match========="+result.toString()); //0100,0110
     	
     	// get one point's index
     	XQuadTree subspace = tree.locate(0.15,0.15);
     	System.out.println("============");
     	subspace.print();
+   
     	
+    	//=========For Decimal Tree======================//
     	
-    	result.clear();
-    	result = decimalTree.match(31.653,40.74789,1,1);
+  /* 	XQuadTree decimalTree = new XQuadTree(rect,10,offset);
+    	decimalTree.buildTree(XConstants.ENCODING_DECIMAL);
+    	//decimalTree.print();
+*/     	
+    	
+/*    	result.clear();
+    	result = decimalTree.match(-31,40,1,1);
     	System.out.println(result.size()+"match========="+result.toString()); //0100,0110
     	// get one point's index
     	subspace = decimalTree.locate(0.15,0.15);
     	System.out.println("============");
-    	subspace.print();
+    	subspace.print();*/
     	
 /*    	Rectangle2D.Double rect = new Rectangle2D.Double(
     			 BixiConstant.MONTREAL_TOP_LEFT_X,

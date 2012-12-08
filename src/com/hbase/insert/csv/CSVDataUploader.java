@@ -1,5 +1,6 @@
 package com.hbase.insert.csv;
 
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.BufferedReader;
 import java.io.File;
@@ -86,21 +87,22 @@ public class CSVDataUploader {
 
 		Rectangle2D.Double space = this.tableSchema.getEntireSpace();
 		double min_size_of_subspace = this.tableSchema.getSubSpace();
+		Point2D.Double offset = this.tableSchema.getOffset();
 		int indexing = this.tableSchema.getIndexing();
 		int encoding = this.tableSchema.getEncoding();
 		
 		if (indexing == XConstants.INDEX_QUAD_TREE) {
 			if (encoding == XConstants.ENCODING_BINARY) {
 
-				this.quadTree = new XQuadTree(space, min_size_of_subspace);
+				this.quadTree = new XQuadTree(space, min_size_of_subspace,offset);
 				this.quadTree.buildTree(XConstants.ENCODING_BINARY);
 
 			} else if (encoding == XConstants.ENCODING_DECIMAL) {
-				this.quadTree = new XQuadTree(space, min_size_of_subspace);
+				this.quadTree = new XQuadTree(space, min_size_of_subspace,offset);
 				this.quadTree.buildTree(XConstants.ENCODING_DECIMAL);
 			}
 		} else if (indexing == XConstants.INDEX_RASTER) {
-			raster = new XRaster(space, min_size_of_subspace);	
+			raster = new XRaster(space, min_size_of_subspace,offset);	
 			
 		} else {
 			System.out.println("Indexing parameter is error!");

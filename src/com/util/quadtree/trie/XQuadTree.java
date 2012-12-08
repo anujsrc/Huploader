@@ -2,6 +2,7 @@ package com.util.quadtree.trie;
 
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.geom.Point2D.Double;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,6 +24,7 @@ public class XQuadTree {
     
     private Rectangle2D.Double m_rect;            // The area this QuadTree represents
     private String index = "";    
+    private Point2D.Double offset = null;
 
     private XQuadTree m_tl_child = null;   // Top Left Child
     private XQuadTree m_tr_child = null;   // Top Right Child
@@ -34,8 +36,21 @@ public class XQuadTree {
 	    
     private boolean hasChild = true;
        
-    public XQuadTree(Rectangle2D.Double rect,double min_size_of_subspace){
-    	this.m_rect = rect;    	
+    /**
+     * 
+     * @param rect
+     * @param min_size_of_subspace
+     * @param offset: Indicate the shifted width and height 
+     */
+    public XQuadTree(Rectangle2D.Double rect,double min_size_of_subspace,Point2D.Double offsetPoint){
+    	// shift the space to the first quadrant
+    	if(offsetPoint != null){
+    		this.offset = new Point2D.Double(offsetPoint.x,offsetPoint.y);   
+    		this.m_rect = new Rectangle2D.Double((rect.x + offsetPoint.x),(rect.y + offsetPoint.y),rect.width,rect.height);
+    	}else{       	
+        	this.m_rect = new Rectangle2D.Double(rect.x,rect.y,rect.width,rect.height);    	
+    	}
+    	//System.out.println("in xquadtree: "+m_rect.x+";"+m_rect.y+";"+m_rect.width+";"+m_rect.height+"========");
     	this.min_size_of_subspace = min_size_of_subspace;
     }
     /*
@@ -52,22 +67,24 @@ public class XQuadTree {
      * @param size_of_subSpace
      * @param depth
      */
-    public void splitSpace(Rectangle2D.Double rect,double size_of_subSpace, int depth,int coding){        
-
+    public void splitSpace(Rectangle2D.Double rect,double size_of_subSpace, int depth,int coding){            	
+    	
     	this.m_rect = rect;        
         this.depth = depth;
         if (this.m_rect.getWidth() > 2*this.min_size_of_subspace) {                    
         	
             double bi_width = m_rect.width / 2;
             double bi_height = m_rect.height / 2;
-            
+                        
             Point2D.Double mid = new Point2D.Double(m_rect.x + bi_width, m_rect.y + bi_height);
             
-            m_tl_child = new XQuadTree(new Rectangle2D.Double(m_rect.x, m_rect.y, bi_width, bi_height),min_size_of_subspace);
-            m_tr_child = new XQuadTree(new Rectangle2D.Double(mid.x, m_rect.y,bi_width, bi_height),min_size_of_subspace);
-            m_bl_child = new XQuadTree(new Rectangle2D.Double(m_rect.x, mid.y, bi_width, bi_height),min_size_of_subspace);
-            m_br_child = new XQuadTree(new Rectangle2D.Double(mid.x, mid.y,bi_width, bi_height),min_size_of_subspace);
+            m_tl_child = new XQuadTree(new Rectangle2D.Double(m_rect.x, m_rect.y, bi_width, bi_height),min_size_of_subspace,null);
+            
+            m_tr_child = new XQuadTree(new Rectangle2D.Double(mid.x, m_rect.y,bi_width, bi_height),min_size_of_subspace,null);
+            m_bl_child = new XQuadTree(new Rectangle2D.Double(m_rect.x, mid.y, bi_width, bi_height),min_size_of_subspace,null);
+            m_br_child = new XQuadTree(new Rectangle2D.Double(mid.x, mid.y,bi_width, bi_height),min_size_of_subspace,null);
               
+            
             if (coding == XConstants.ENCODING_BINARY){
                 this.m_tl_child.index = this.index+"00";
                 this.m_tr_child.index = this.index+"01";
@@ -96,7 +113,20 @@ public class XQuadTree {
         }        
         
     }
-   
+    /**
+     * This is because the space is normalized, so the point should be normalized as well.
+     * @return
+     */
+    private double[] normalize(double x, double y){
+    	double[] result = new double[]{x,y};
+    	if(this.offset != null){
+    		result[0] += this.offset.x;
+    		result[1] += this.offset.y;
+    	}
+    	return result; 
+    }
+    
+    
     /**
      * It is called by locate. It is to determine whether the point is in the subspace or not.
      * @param x increase from left to right
@@ -104,6 +134,9 @@ public class XQuadTree {
      * @return
      */
     public boolean isInside(double x, double y) {
+    	double[] normalized = this.normalize(x, y);
+    	x = normalized[0];
+    	y = normalized[1];
     	double x1 = this.m_rect.getX();
     	double x2 = this.m_rect.getX()+this.m_rect.getWidth();
     	double y1 = this.m_rect.getY();
@@ -127,8 +160,10 @@ public class XQuadTree {
      * @return
      */  
     public XQuadTree locate(double x, double y) {
-    	x = Math.abs(x);
-    	y = Math.abs(y);
+    	double[] normalized = this.normalize(x, y);
+    	x = normalized[0];
+    	y = normalized[1];   	
+    	
         if (this.hasChild) {
             // check children
             if (this.m_tl_child.isInside(x,y)) {            	
@@ -157,10 +192,12 @@ public class XQuadTree {
      * @return the index(es) of subspaces
      */
     public List<String> match(double x,double y, double w,double h){
-    	Rectangle2D.Double rect = new Rectangle2D.Double(Math.abs(x),Math.abs(y),w,h);
+    	double[] normalized = this.normalize(x, y);
+    	
+    	Rectangle2D.Double rect = new Rectangle2D.Double(normalized[0],normalized[1],w,h);
         // If this quad doesn't intersect the items rectangle, do nothing
         if (!m_rect.intersects(rect)
-        		&& !m_rect.contains(new Point2D.Double(rect.getX(),rect.getY()))){           	
+        		&& !m_rect.contains(new Point2D.Double(rect.getX(),rect.getY()))){        	
         	return null;
         } 
         ArrayList<String> result = new ArrayList<String>();

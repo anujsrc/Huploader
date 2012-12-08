@@ -1,6 +1,8 @@
 package com.util;
 
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.geom.Point2D.Double;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -133,7 +135,7 @@ public class XTableSchema {
 	public double getSubSpace(){
 		JSONObject schema = getSchemaObject();
 		if(schema.containsKey(XHBaseConstant.TABLE_DESC_SUBSPACE)){
-			return Double.valueOf((String)schema.get(XHBaseConstant.TABLE_DESC_SUBSPACE));
+			return java.lang.Double.valueOf((String)schema.get(XHBaseConstant.TABLE_DESC_SUBSPACE));
 		}else{
 			return -1;
 		}
@@ -175,15 +177,31 @@ public class XTableSchema {
 		if(schema.containsKey(XHBaseConstant.TABLE_DESC_SPACE)){
 			String space = (String)schema.get(XHBaseConstant.TABLE_DESC_SPACE);
 			String[] items = space.split(",");
-			return new Rectangle2D.Double(Double.valueOf(items[0]).doubleValue(),
-										Double.valueOf(items[1]).doubleValue(),
-										Double.valueOf(items[2]).doubleValue(),
-										Double.valueOf(items[3]).doubleValue());
+			return new Rectangle2D.Double(java.lang.Double.valueOf(items[0]).doubleValue(),
+											java.lang.Double.valueOf(items[1]).doubleValue(),
+											java.lang.Double.valueOf(items[2]).doubleValue(),
+											java.lang.Double.valueOf(items[3]).doubleValue());
 			
 		}else{
 			return null;
 		}
 	}	
 	
-	
+	/**
+	 * The offset point to normalize the space to the first quadrant, 
+	 * the format is (x,y)
+	 * @return
+	 */
+	public Point2D.Double getOffset(){
+		JSONObject schema = getSchemaObject();
+		if(schema.containsKey(XHBaseConstant.TABLE_DESC_OFFSET)){
+			String space = (String)schema.get(XHBaseConstant.TABLE_DESC_OFFSET);
+			String[] items = space.split(",");
+			if(items != null || items.length == 2){
+				return new Point2D.Double(java.lang.Double.valueOf(items[0]).doubleValue(),
+						java.lang.Double.valueOf(items[1]).doubleValue());
+			}
+		}
+		return null;
+	}		
 }
