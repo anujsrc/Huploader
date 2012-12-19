@@ -91,7 +91,7 @@ public class BixiQuery4QT extends QueryAbstraction{
 			// match rect to find the subspace it belongs to
 			
 			long match_s = System.currentTimeMillis();
-			List<String> indexes = this.quadTree.match(x,y,2*radius,2*radius);
+			List<String> indexes = this.quadTree.match(x,y,radius);
 			long match_time = System.currentTimeMillis() - match_s;			
 			
 			// prepare filter for scan
@@ -187,7 +187,7 @@ public class BixiQuery4QT extends QueryAbstraction{
 			
 			// match rect to find the subspace it belongs to
 			long match_s = System.currentTimeMillis();
-			List<String> indexes = quadTree.match(x,y,2*radius,2*radius);
+			List<String> indexes = quadTree.match(x,y,radius);
 			long match_time = System.currentTimeMillis() - match_s;
 			// prepare filter for scan
 			FilterList fList = new FilterList(FilterList.Operator.MUST_PASS_ONE);

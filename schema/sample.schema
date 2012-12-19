@@ -1,8 +1,8 @@
-{   "name": "bixi.qt.be.1",
+{   "name": "gecon.raster.1",
 	"families":[
 	{
 	  "name":"f",
-	  "compression":"GZ", 
+	  "compression":"GZ",
 	  "versions":"1", // This is very important when you are using 3rd dimension
 	  "min_versions":"1",
 	  "blocksize":"",
@@ -13,12 +13,17 @@
 	}
 	],
 	"max_file_size":"",
-	"mem_store_size":"",	
+	"mem_store_size":"",
 	
-	"schema":{ // This is for the table schema
-		"space":"0,0,100,100", // x-left-bottom, y-left-bottom, width,height
-		"indexing":"0", // 0: quad tree, 1: raster
-		"encoding":"0", // 0: binary encoding, 1: decimal encoding
-		"subspace":"1"  // subspace size
-	}
+	"schema":{
+		"space":"-90,-180,180,360",// x-left-bottom, y-left-bottom, width,height
+		"offset":"90,180",
+		"indexing":"1",// 0: quad tree, 1: raster
+		"encoding":"0",// 0: binary encoding, 1: decimal encoding
+		"subspace":"1" // subspace size
+	},
+	
+	"log_file_name":"gecon-raster-1"
+
 }
+

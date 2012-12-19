@@ -2,6 +2,7 @@ package com.util.raster;
 
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.geom.Rectangle2D.Double;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,8 +31,13 @@ public class XRaster {
     
     public XRaster(Rectangle2D.Double rect, double min_size_of_height,Point2D.Double offsetPoint){
     	if(offsetPoint != null){
-    		this.offset = new Point2D.Double(offsetPoint.x,offsetPoint.y);   
-    		this.m_rect = new Rectangle2D.Double((rect.x + offsetPoint.x),(rect.y + offsetPoint.y),rect.width,rect.height);
+    		this.offset = new Point2D.Double(offsetPoint.x,offsetPoint.y);  
+    		if(rect.x < 0 || rect.y < 0){
+    			this.m_rect = new Rectangle2D.Double((rect.x + offsetPoint.x),(rect.y + offsetPoint.y),rect.width,rect.height);	
+    		}else{
+    			this.m_rect = new Rectangle2D.Double((rect.x - offsetPoint.x),(rect.y - offsetPoint.y),rect.width,rect.height);
+    		}
+    		
     	}else{       	
         	this.m_rect = new Rectangle2D.Double(rect.x,rect.y,rect.width,rect.height);    	
     	}
@@ -54,8 +60,14 @@ public class XRaster {
     private double[] normalize(double x, double y){
     	double[] result = new double[]{x,y};
     	if(this.offset != null){
-    		result[0] += this.offset.x;
-    		result[1] += this.offset.y;
+    		if(x<0 || y < 0){
+    			result[0] += this.offset.x;
+        		result[1] += this.offset.y;	
+    		}else{
+    			result[0] -= this.offset.x;
+        		result[1] -= this.offset.y;	    			
+    		}
+    		
     	}
     	return result; 
     }    
@@ -74,6 +86,7 @@ public class XRaster {
     }
     /**
      * This is for locating the index for the point within the normailzed space 
+     * The range is [), it is consistent with the scan, the stop is also the semi-interval
      * @param x
      * @param y
      * @return
@@ -120,11 +133,34 @@ public class XRaster {
     	double minY = (m_rect.getMinY()<(y-radius))? (y-radius):m_rect.getMinY(); 
     	double maxX = (m_rect.getMaxX()>(x+radius))? (x+radius):m_rect.getMaxX();
     	double maxY = (m_rect.getMaxY()>(y+radius))? (y+radius):m_rect.getMaxY();
-    	System.out.println("bounder: ("+minX+","+minY+")("+maxX+","+maxY+")");
+    	System.out.println("match bounder: ("+minX+","+minY+")("+maxX+","+maxY+")");
     	
     	XBox tl = this.intervalLocate(minX, minY);    	
     	XBox br = this.intervalLocate(maxX, maxY);    	
     	return new XBox[]{tl,br};    	   	
+    }
+    
+    public XBox[] intersect(Rectangle2D.Double rect)throws Exception{
+
+    	
+    	double[] normalized = this.normalize(rect.getX(),rect.getY());
+    	Rectangle2D.Double vRect = new Rectangle2D.Double(normalized[0],normalized[1],
+    			rect.getWidth(),rect.getHeight());
+    	
+/*    	System.out.println("Grid: "+this.m_rect.getX()+";"+this.m_rect.getY()+"==>"+this.m_rect.getWidth()+";"+this.m_rect.getHeight());
+    	System.out.println("Range: "+rect.getX()+";"+rect.getY()+"==>"+rect.getWidth()+";"+rect.getHeight());
+    	System.out.println("Range: "+vRect.getX()+";"+vRect.getY()+"==>"+vRect.getWidth()+";"+vRect.getHeight());
+    	System.out.println("Range: "+vRect.getMinX()+";"+vRect.getMinY()+"==>"+vRect.getMaxX()+";"+vRect.getMaxY());
+ */   	
+    	Rectangle2D.Double dest = new Rectangle2D.Double();
+    	Rectangle2D.Double.intersect(vRect, this.m_rect, dest);
+/*    	System.out.println("intersection rectangle: "+dest.getMinX()+";"+dest.getMinY()+"==>"+dest.getMaxX()+";"+dest.getMaxY());
+    	System.out.println("intersection rectangle: "+dest.getX()+";"+dest.getY()+"==>"+dest.getWidth()+";"+dest.getHeight());
+ */   	
+    	XBox tl = this.intervalLocate(dest.getMinX(), dest.getMinY());    	
+    	XBox br = this.intervalLocate(dest.getMaxX(), dest.getMaxY());    	
+    	
+    	return new XBox[]{tl,br};      	    	
     }
     
     public String[] getColumns(XBox top_left, XBox bottom_right){

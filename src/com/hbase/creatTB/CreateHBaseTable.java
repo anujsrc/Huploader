@@ -1,11 +1,5 @@
 package com.hbase.creatTB;
-
-import java.io.File;
-import java.io.FileReader;
-import java.io.InputStream;
-
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 
 import com.hbase.service.HBaseUtil;
 import com.util.XParser;

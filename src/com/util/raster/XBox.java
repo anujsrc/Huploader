@@ -20,7 +20,7 @@ public class XBox {
 
 	public String toString(){
 		String msg = "("+this.row+","+
-					this.column+")=>"+this.objectCount;
+					this.column+")=>"+this.objectCount;					
 		return msg;
 	}
 	

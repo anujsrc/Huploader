@@ -45,8 +45,13 @@ public class XQuadTree {
     public XQuadTree(Rectangle2D.Double rect,double min_size_of_subspace,Point2D.Double offsetPoint){
     	// shift the space to the first quadrant
     	if(offsetPoint != null){
-    		this.offset = new Point2D.Double(offsetPoint.x,offsetPoint.y);   
-    		this.m_rect = new Rectangle2D.Double((rect.x + offsetPoint.x),(rect.y + offsetPoint.y),rect.width,rect.height);
+    		this.offset = new Point2D.Double(offsetPoint.x,offsetPoint.y);  
+    		if(rect.x < 0 || rect.y < 0){
+    			this.m_rect = new Rectangle2D.Double((rect.x + offsetPoint.x),(rect.y + offsetPoint.y),rect.width,rect.height);	
+    		}else{
+    			this.m_rect = new Rectangle2D.Double((rect.x - offsetPoint.x),(rect.y - offsetPoint.y),rect.width,rect.height);
+    		}
+    		
     	}else{       	
         	this.m_rect = new Rectangle2D.Double(rect.x,rect.y,rect.width,rect.height);    	
     	}
@@ -71,30 +76,30 @@ public class XQuadTree {
     	
     	this.m_rect = rect;        
         this.depth = depth;
-        if (this.m_rect.getWidth() > 2*this.min_size_of_subspace) {                    
+        // change > to >=, because it should split when the width is double of the subspace
+        if (this.m_rect.getWidth() >= 2*this.min_size_of_subspace) {                    
         	
             double bi_width = m_rect.width / 2;
             double bi_height = m_rect.height / 2;
                         
             Point2D.Double mid = new Point2D.Double(m_rect.x + bi_width, m_rect.y + bi_height);
             
-            m_tl_child = new XQuadTree(new Rectangle2D.Double(m_rect.x, m_rect.y, bi_width, bi_height),min_size_of_subspace,null);
-            
+            m_tl_child = new XQuadTree(new Rectangle2D.Double(m_rect.x, m_rect.y, bi_width, bi_height),min_size_of_subspace,null);           
             m_tr_child = new XQuadTree(new Rectangle2D.Double(mid.x, m_rect.y,bi_width, bi_height),min_size_of_subspace,null);
             m_bl_child = new XQuadTree(new Rectangle2D.Double(m_rect.x, mid.y, bi_width, bi_height),min_size_of_subspace,null);
             m_br_child = new XQuadTree(new Rectangle2D.Double(mid.x, mid.y,bi_width, bi_height),min_size_of_subspace,null);
               
             
             if (coding == XConstants.ENCODING_BINARY){
-                this.m_tl_child.index = this.index+"00";
-                this.m_tr_child.index = this.index+"01";
-                this.m_bl_child.index = this.index+"10";
-                this.m_br_child.index = this.index+"11";            	
+                this.m_tl_child.index = this.index+"01";
+                this.m_tr_child.index = this.index+"11";
+                this.m_bl_child.index = this.index+"00";
+                this.m_br_child.index = this.index+"10";            	
             }else if(coding == XConstants.ENCODING_DECIMAL){
-                this.m_tl_child.index = this.index+"0";
-                this.m_tr_child.index = this.index+"1";
-                this.m_bl_child.index = this.index+"2";
-                this.m_br_child.index = this.index+"3"; 
+                this.m_tl_child.index = this.index+"1";
+                this.m_tr_child.index = this.index+"3";
+                this.m_bl_child.index = this.index+"0";
+                this.m_br_child.index = this.index+"2"; 
             }           	
                         
             this.m_tl_child.splitSpace(new Rectangle2D.Double(m_rect.x, m_rect.y, bi_width, bi_height),bi_width,this.depth+1,coding);            
@@ -119,10 +124,17 @@ public class XQuadTree {
      */
     private double[] normalize(double x, double y){
     	double[] result = new double[]{x,y};
-    	if(this.offset != null){
-    		result[0] += this.offset.x;
-    		result[1] += this.offset.y;
+    	if(this.offset != null){   		
+    		if(x<0 || y < 0){
+    			result[0] += this.offset.x;
+        		result[1] += this.offset.y;	
+    		}else{
+    			result[0] -= this.offset.x;
+        		result[1] -= this.offset.y;	    			
+    		}    		
     	}
+    	
+    	
     	return result; 
     }
     
@@ -191,10 +203,10 @@ public class XQuadTree {
      * @param item
      * @return the index(es) of subspaces
      */
-    public List<String> match(double x,double y, double w,double h){
+    public List<String> match(double x,double y, double radius){
     	double[] normalized = this.normalize(x, y);
     	
-    	Rectangle2D.Double rect = new Rectangle2D.Double(normalized[0],normalized[1],w,h);
+    	Rectangle2D.Double rect = new Rectangle2D.Double(normalized[0]-radius,normalized[1]-radius,2*radius,2*radius);
         // If this quad doesn't intersect the items rectangle, do nothing
         if (!m_rect.intersects(rect)
         		&& !m_rect.contains(new Point2D.Double(rect.getX(),rect.getY()))){        	
@@ -219,6 +231,42 @@ public class XQuadTree {
         return result; 
     }    
   
+    /**
+     * This is to find the subspace for the area which is defined by a point and a distance
+     * Query: It is used to process the query which is to get the points within a certain distance of the given point 
+     * @param item
+     * @return the index(es) of subspaces
+     */
+    public List<XQuadTree> tileMatch(double x,double y, double radius){
+    	double[] normalized = this.normalize(x, y);
+    	// fix this, because the given point should be the center point not the upper-left point
+    	Rectangle2D.Double rect = new Rectangle2D.Double(normalized[0]-radius,normalized[1]-radius,2*radius,2*radius);
+    	
+        // If this quad doesn't intersect the items rectangle, do nothing
+        if (!m_rect.intersects(rect)
+        		&& !m_rect.contains(new Point2D.Double(rect.getX(),rect.getY()))){        	
+        	return null;
+        } 
+        ArrayList<XQuadTree> result = new ArrayList<XQuadTree>();
+        Queue<XQuadTree> qe = new LinkedList<XQuadTree>();
+        qe.offer(this);
+        while(qe != null){
+        	
+        	while(!qe.isEmpty() && qe.element().m_tl_child == null){
+        		XQuadTree leaf = qe.poll();
+        		result.add(leaf);        		
+        	}
+        	
+        	if(qe.isEmpty())
+        		break;
+        	
+        	XQuadTree leaf = qe.poll();        	
+        	getDestinationTree(leaf,rect,qe);      	                	        	    
+       }
+        return result; 
+    }        
+    
+    
     /**
      * It is called by match()
      * @param destTree

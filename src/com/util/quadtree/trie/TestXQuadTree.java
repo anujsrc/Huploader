@@ -20,7 +20,7 @@ public class TestXQuadTree {
     	tree.buildTree(XConstants.ENCODING_BINARY);
     	//tree.print();
     	   	
-       	List<String> result = tree.match(-89,120,1,1);
+       	List<String> result = tree.match(-89,120,1);
     	System.out.println(result.size()+"match========="+result.toString()); //0100,0110
     	
     	// get one point's index
