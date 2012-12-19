@@ -268,23 +268,7 @@ public abstract class QueryAbstraction {
 	 * @param longitude
 	 */
 	public abstract String scanQueryPoint(double latitude, double longitude);
-	
-	/**
-	 * 
-	 * @param latitude
-	 * @param longitude
-	 * @param area
-	 */
-	public abstract void copQueryArea(final double latitude, final double longitude,final int area);	
-	
-	/**
-	 * 
-	 * @param latitude
-	 * @param longitude
-	 * @param area : north, south, west, east
-	 */
-	public abstract void scanQueryArea(double latitude, double longitude, int area);
-	
+
 	
 	/**A coprocessor method that will fetch KNN for the given point 
 	 * 
@@ -307,14 +291,38 @@ public abstract class QueryAbstraction {
 	public abstract TreeMap<Double,String> scanQueryAvailableKNN(String timestamp,
 			double latitude, double longitude,int n);	
 
-	/**
+	
+	
+	/*******************************************************************************************
+	/*********************The below query is in the queue now***********************************
+	*********************************************************************************************/
+	
+/*	*//**
+	 * 
+	 * @param latitude
+	 * @param longitude
+	 * @param area
+	 *//*
+	public abstract void copQueryArea(final double latitude, final double longitude,final int area);	
+	
+	*//**
+	 * 
+	 * @param latitude
+	 * @param longitude
+	 * @param area : north, south, west, east
+	 *//*
+	public abstract void scanQueryArea(double latitude, double longitude, int area);
+	
+	
+	
+	*//**
 	 * For debug
 	 * @param timestamp
 	 * @param latitude
 	 * @param longitude
 	 * @param radius
 	 * @return
-	 */
-	//public abstract List<Point2D.Double> debugColumnVersion(String timestamp,double latitude, double longitude, double radius);
+	 *//*
+	public abstract List<Point2D.Double> debugColumnVersion(String timestamp,double latitude, double longitude, double radius);*/
 	
 }

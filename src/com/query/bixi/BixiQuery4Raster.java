@@ -19,6 +19,7 @@ import com.query.bixi.coprocessor.BixiProtocol;
 import com.query.bixi.coprocessor.RCopResult;
 import com.util.XCSVFormat;
 import com.util.XTableSchema;
+import com.util.quadtree.trie.XQuadTree;
 import com.util.raster.XBox;
 
 public class BixiQuery4Raster extends QueryAbstraction{
@@ -224,9 +225,106 @@ public class BixiQuery4Raster extends QueryAbstraction{
 	}
 
 	@Override
-	public String copQueryPoint(double latitude, double longitude) {
-		// TODO Auto-generated method stub
-		return null;
+	public String copQueryPoint(final double latitude, final double longitude) {
+
+		try{	
+			this.getCSVLog(0);		
+			this.getCSVLog(2);	
+			this.timePhase.clear();		
+		    /**Step1** Call back class definition **/
+		    class BixiCallBack implements Batch.Callback< RCopResult> {
+		    	RCopResult res = new RCopResult();		    	
+		    	QueryAbstraction query = null;
+		    	
+		     public BixiCallBack(QueryAbstraction query){
+		    	this.query = query; 
+		     }
+		      @Override
+		      public void update(byte[] region, byte[] row,  RCopResult result) {		    	  		    	  
+					long current = System.currentTimeMillis();					
+					if(result.getRes() != null)
+						res.getRes().addAll(result.getRes()); // to verify the error when large data
+					res.setStart(result.getStart());
+					res.setEnd(result.getEnd());
+					res.setRows((res.getRows()+result.getRows()));
+					res.setCells(res.getCells()+result.getCells());								
+			    	  // write them into csv file
+			    	 String outStr = "";
+			    	  outStr += "within,"+"cop,"+result.getParameter()+","+result.getStart()+","+result.getEnd()+","+current+","+
+			    			  	result.getRows()+","+result.getCells()+","+result.getKvLength()+","+result.getRes().size()+","+
+			    			  	this.query.regionAndRS.get(Bytes.toString(region))+","+Bytes.toString(region);
+			    	  this.query.writeCSVLog(outStr,1);								    	
+				}		    	  
+		    	  		    	  
+		      }		      		    
+		    BixiCallBack callBack = new BixiCallBack(this);		   
+		    
+		    /**Step2*** generate scan***/		
+		    // record the start time
+		    long s_time = System.currentTimeMillis();
+			this.timePhase.add(s_time);
+			
+			// match rect to find the subspace it belongs to
+	    	long match_s = System.currentTimeMillis();
+			XBox match_box = raster.locate(latitude, longitude);
+			long match_time = System.currentTimeMillis() - match_s;
+			String[] rowRange = new String[2];
+			rowRange[0] = match_box.getRow();
+			rowRange[1] = match_box.getRow()+"0";			
+	    	    	
+			// generate the scan
+			final Scan scan = hbase.generateScan(rowRange, null, new String[]{this.tableSchema.getFamilyName()},
+					new String[]{match_box.getColumn()}, this.tableSchema.getMaxVersions());
+				    			    	    		    		 		    
+		    System.out.println("start to send the query to coprocessor.....");		    
+		    
+		    /**Step3: send request to trigger Coprocessor execution**/
+		    this.timePhase.add(System.currentTimeMillis());
+		    final XCSVFormat csv = this.csvFormat;
+		    hbase.getHTable().coprocessorExec(BixiProtocol.class, scan.getStartRow(),scan.getStopRow(),
+		    		new Batch.Call<BixiProtocol,  RCopResult >() {
+		      
+		    	public  RCopResult call(BixiProtocol instance)
+		          throws IOException {
+		    		
+		        return instance.copQueryPoint4QT(scan, latitude, longitude,csv);			        
+		        
+		      };
+		    }, callBack);
+
+		    long e_time = System.currentTimeMillis();
+		    this.timePhase.add(e_time);		    					
+			
+		    long exe_time = e_time - s_time;
+			// write to csv file
+			String outStr = "";
+			outStr += "within,"+"cop,"+callBack.res.getRes().size()+","+callBack.res.getCells()+","+callBack.res.getRows()+","+
+						exe_time+","+match_time+","+this.tableSchema.getSubSpace()+",("+latitude+":"+longitude+")";	
+											
+			
+			for(int i=0;i<this.timePhase.size();i++){
+				outStr += ",";
+				outStr +=this.timePhase.get(i);
+			}					
+			this.writeCSVLog(outStr, 0);
+			if(callBack.res.getRes().size() > 0){
+				callBack.res.getRes().get(0);
+			}
+			
+		    System.out.println("The point "+"("+latitude+":"+longitude+") does not be found "); 
+		    
+		}catch(Exception e){
+			e.printStackTrace();
+		}catch(Throwable ee){
+			ee.printStackTrace();
+		}finally{
+			hbase.closeTableHandler();
+			this.closeCSVLog();
+		}
+		
+		return null;		
+		
+		
 	}
 
 	@Override
@@ -235,22 +333,11 @@ public class BixiQuery4Raster extends QueryAbstraction{
 		return null;
 	}
 
-	@Override
-	public void copQueryArea(double latitude, double longitude, int area) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void scanQueryArea(double latitude, double longitude, int area) {
-		// TODO Auto-generated method stub
-		
-	}
 
 	@Override
 	public void copQueryAvailableKNN(String timestamp, double latitude,
 			double longitude, int n) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 

@@ -46,7 +46,7 @@ public class QueryClient {
             		"propertyname");
 			return;
 		}
-		QueryClient client = new QueryClient(args[0], args[1], args[2]);			
+		QueryClient client = new QueryClient(args[0], args[1], args[2]);		
 		
 		int query = Integer.valueOf(args[3]);
 		int implement = Integer.valueOf(args[4]);

@@ -88,31 +88,36 @@ public class BixiImplementation extends BaseEndpointCoprocessor implements BixiP
 		return results;	
 	}
 	
-	public String copQueryPoint4QT(Scan scan,double latitude,double longitude,XCSVFormat csv)throws IOException{
+	public RCopResult copQueryPoint4QT(Scan scan,double latitude,double longitude,XCSVFormat csv)throws IOException{
 		
 		long sTime = System.currentTimeMillis();
-		System.out.println(sTime+": in the copQueryPoint4LS1....");
+		System.out.println(sTime+": in the copQueryPoint4QT....");
 		/**Step1: get internalScanner***/
 		InternalScanner scanner = ((RegionCoprocessorEnvironment) getEnvironment()).getRegion().getScanner(scan);
 		List<KeyValue> keyvalues = new ArrayList<KeyValue>();		
 		boolean hasMoreResult = false;				
 		/**Step2: iterate the result from the scanner**/
-		int count = 0;		
-		String stationName = null;
+		int count = 0;				
+		RCopResult results = new RCopResult();
+		int cell = 0;
+		int row = 0;		
+		int kvLength = 0;
 		try {
 			do {
 				hasMoreResult = scanner.next(keyvalues);
 				if(keyvalues != null && keyvalues.size() > 0){	
+					row++;
 					for(KeyValue kv:keyvalues){
+						
+						kvLength = (kvLength < kv.getLength())? kv.getLength():kvLength;
+						cell++;
 						//System.out.println(Bytes.toString(kv.getRow())+"=>"+Bytes.toString(kv.getValue()));
 						count++;
 						// get the distance between this point and the given point
-
 						Hashtable<String,String>  pairs = csv.fromPairString(Bytes.toString(kv.getValue()));
 						if((Double.valueOf(pairs.get("lat")).doubleValue() == latitude) && 
 								(Double.valueOf(pairs.get("long")).doubleValue() == longitude)){
-							stationName = Bytes.toString(kv.getQualifier());
-							System.out.println(Bytes.toString(kv.getQualifier()));
+							results.getRes().add(Bytes.toString(kv.getQualifier()));							
 							break;
 						}									
 					}
@@ -120,11 +125,16 @@ public class BixiImplementation extends BaseEndpointCoprocessor implements BixiP
 				keyvalues.clear();
 				
 				
-			} while (hasMoreResult);
+			} while (hasMoreResult);					
 			
 			long eTime = System.currentTimeMillis();
 			
-			System.out.println("exe_time=>"+(eTime-sTime)+";result=>"+stationName+";count=>"+count);			
+			results.setStart(sTime);
+			results.setEnd(eTime);
+			results.setRows(row);
+			results.setCells(cell);
+			results.setKvLength(kvLength);
+			results.setParameter("("+String.valueOf(latitude)+":"+String.valueOf(longitude)+")");			
 			
 		}catch(Exception e){
 			e.printStackTrace();
@@ -132,7 +142,7 @@ public class BixiImplementation extends BaseEndpointCoprocessor implements BixiP
 			scanner.close();
 		}
 						
-		return stationName;			
+		return results;			
 	}
 	
 	
@@ -152,8 +162,7 @@ public class BixiImplementation extends BaseEndpointCoprocessor implements BixiP
 		
 		/**Step2: iterate the scan result ***/
 		int row = 0;
-		int cell = 0;
-		int accepted = 0;
+		int cell = 0;		
 		int kvLength = 0;
 		try {
 			do {
@@ -175,7 +184,6 @@ public class BixiImplementation extends BaseEndpointCoprocessor implements BixiP
 						if(distance <= radius){						
 							//System.out.println("row=>"+Bytes.toString(kv.getRow()) + ";colum=>"+Bytes.toString(kv.getQualifier())+ ";station=>"+station.getId());
 							results.getRes().add(pairs.get("id"));
-							accepted++;
 						}
 							
 					}
@@ -191,7 +199,7 @@ public class BixiImplementation extends BaseEndpointCoprocessor implements BixiP
 			results.setCells(cell);
 			results.setKvLength(kvLength);
 			results.setParameter(String.valueOf(radius));
-			//System.out.println("exe_time=>"+(eTime-sTime)+";result=>"+results.getRes().size()+";count=>"+row+";accepted=>"+accepted);			
+						
 			
 		}catch(Exception e){
 			e.printStackTrace();
@@ -203,7 +211,7 @@ public class BixiImplementation extends BaseEndpointCoprocessor implements BixiP
 				
 	}	
 	
-	public String copQueryPoint4Raster(Scan scan,double latitude,double longitude,XCSVFormat csv)throws IOException{
+	public RCopResult copQueryPoint4Raster(Scan scan,double latitude,double longitude,XCSVFormat csv)throws IOException{
 		
 		long sTime = System.currentTimeMillis();
 		System.out.println(sTime+": in the copQueryPoint4LS2....");
@@ -213,23 +221,28 @@ public class BixiImplementation extends BaseEndpointCoprocessor implements BixiP
 		boolean hasMoreResult = false;				
 		
 		/**Step2: iterate the scan result ***/
+		RCopResult results = new RCopResult();
 		int count = 0;
-		int accepted = 0;
-		String stationName = null;
+		int accepted = 0;		
+		int cell = 0;
+		int row = 0;		
+		int kvLength = 0;
 		try {
 			do {
 				hasMoreResult = scanner.next(keyvalues);
 				if(keyvalues != null && keyvalues.size() > 0){	
-											
+					row++;
 					for(KeyValue kv:keyvalues){
 						//System.out.println(Bytes.toString(kv.getRow())+"=>"+Bytes.toString(kv.getValue()));
+						kvLength = (kvLength < kv.getLength())? kv.getLength():kvLength;
+						cell++;
 						count++;						
 						// get the distance between this point and the given point						
 												
 						Hashtable<String,String>  pairs = csv.fromPairString(Bytes.toString(kv.getValue()));						
 						
 						if((Double.valueOf(pairs.get("lat")).doubleValue() == latitude && Double.valueOf(pairs.get("long")).doubleValue()== longitude)){
-							stationName = pairs.get("name");								
+							results.getRes().add(pairs.get("name"));								
 							break;
 						}							
 
@@ -240,8 +253,12 @@ public class BixiImplementation extends BaseEndpointCoprocessor implements BixiP
 			} while (hasMoreResult);
 			
 			long eTime = System.currentTimeMillis();
-			
-			System.out.println("exe_time=>"+(eTime-sTime)+";result=>"+stationName+";count=>"+count);			
+			results.setStart(sTime);
+			results.setEnd(eTime);
+			results.setRows(row);
+			results.setCells(cell);
+			results.setKvLength(kvLength);
+			results.setParameter("("+String.valueOf(latitude)+":"+String.valueOf(longitude)+")");
 			
 			
 		} catch(Exception e){
@@ -250,7 +267,7 @@ public class BixiImplementation extends BaseEndpointCoprocessor implements BixiP
 			scanner.close();
 		}
 						
-		return stationName;		
+		return results;		
 	}
 	
 

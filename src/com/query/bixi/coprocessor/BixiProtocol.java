@@ -17,11 +17,11 @@ public interface BixiProtocol extends CoprocessorProtocol {
   
   /*******************For location Schema1**QuadTree************************/
   RCopResult copQueryNeighbor4QT(Scan scan,double latitude,double longitude,double radius,XCSVFormat csv)throws IOException;
-  String copQueryPoint4QT(Scan scan,double latitude,double longitude,XCSVFormat csv)throws IOException;
+  RCopResult copQueryPoint4QT(Scan scan,double latitude,double longitude,XCSVFormat csv)throws IOException;
   
   /*******************For location Schema2**************************/
   RCopResult copQueryNeighbor4Raster(Scan scan,double latitude,double longitude,double radius,XCSVFormat csv)throws IOException;
-  String copQueryPoint4Raster(Scan scan,double latitude,double longitude,XCSVFormat csv)throws IOException;
+  RCopResult copQueryPoint4Raster(Scan scan,double latitude,double longitude,XCSVFormat csv)throws IOException;
   
   
 }

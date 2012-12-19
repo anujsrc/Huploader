@@ -246,9 +246,7 @@ public class BixiQuery4QT extends QueryAbstraction{
 				outStr+=",";
 				outStr += this.timePhase.get(i);				
 			}
-			this.writeCSVLog(outStr, 0);
-			
-			//this.writeCSVLog(timeStr, 2);
+			this.writeCSVLog(outStr, 0);						
 			
 			
 		}catch(Exception e){
@@ -262,13 +260,14 @@ public class BixiQuery4QT extends QueryAbstraction{
 
 	@Override
 	public String copQueryPoint(final double latitude, final double longitude) {
-		long s_time = System.currentTimeMillis();
-/*		try{	
+		
+		try{	
 			this.getCSVLog(0);		
-			this.getCSVLog(2);			
-		    *//**Step1** Call back class definition **//*
-		    class BixiCallBack implements Batch.Callback< String> {
-		    	String  res = null;
+			this.getCSVLog(2);	
+			this.timePhase.clear();		
+		    /**Step1** Call back class definition **/
+		    class BixiCallBack implements Batch.Callback< RCopResult> {
+		    	RCopResult res = new RCopResult();
 		    	int count = 0;
 		    	QueryAbstraction query = null;
 		    	
@@ -276,21 +275,32 @@ public class BixiQuery4QT extends QueryAbstraction{
 		    	this.query = query; 
 		     }
 		      @Override
-		      public void update(byte[] region, byte[] row,  String result) {
+		      public void update(byte[] region, byte[] row,  RCopResult result) {
 		    	  count++;
 		    	  
-		    	  String outStr="endTime="+System.currentTimeMillis()+";region=>"+Bytes.toString(region)+
-		    			  ";count=>"+count+";result=>"+result;		    	  
-		    	  this.query.writeStat(outStr);	
-		    	  outStr = query.regions.get(Bytes.toString(region)).toString();
-		    	  this.query.writeStat(outStr);
-		    	  res = result;
-		      }		      
-		    }		    
-		    BixiCallBack callBack = new BixiCallBack(this);
+					long current = System.currentTimeMillis();
+					count++;
+					if(result.getRes() != null)
+						res.getRes().addAll(result.getRes()); // to verify the error when large data
+					res.setStart(result.getStart());
+					res.setEnd(result.getEnd());
+					res.setRows((res.getRows()+result.getRows()));
+					res.setCells(res.getCells()+result.getCells());								
+			    	  // write them into csv file
+			    	 String outStr = "";
+			    	  outStr += "within,"+"cop,"+result.getParameter()+","+result.getStart()+","+result.getEnd()+","+current+","+
+			    			  	result.getRows()+","+result.getCells()+","+result.getKvLength()+","+result.getRes().size()+","+
+			    			  	this.query.regionAndRS.get(Bytes.toString(region))+","+Bytes.toString(region);
+			    	  this.query.writeCSVLog(outStr,1);								    	
+				}		    	  
+		    	  		    	  
+		      }		      		    
+		    BixiCallBack callBack = new BixiCallBack(this);		   
 		    
-		    *//**Step2*** generate scan***//* 							   
+		    /**Step2*** generate scan***/							   
 			// match rect to find the subspace it belongs to
+		    long s_time = System.currentTimeMillis();
+			this.timePhase.add(s_time);
 			
 			long match_s = System.currentTimeMillis();
 			XQuadTree node = quadTree.locate(latitude, longitude);
@@ -304,28 +314,37 @@ public class BixiQuery4QT extends QueryAbstraction{
 		    
 		    System.out.println("start to send the query to coprocessor.....");		    
 		    
-		    *//**Step3: send request to trigger Coprocessor execution**//*
+		    /**Step3: send request to trigger Coprocessor execution**/
+		    this.timePhase.add(System.currentTimeMillis());
 		    final XCSVFormat csv = this.csvFormat;
 		    hbase.getHTable().coprocessorExec(BixiProtocol.class, scan.getStartRow(),scan.getStopRow(),
-		    		new Batch.Call<BixiProtocol,  String >() {
+		    		new Batch.Call<BixiProtocol,  RCopResult >() {
 		      
-		    	public  String call(BixiProtocol instance)
+		    	public  RCopResult call(BixiProtocol instance)
 		          throws IOException {
 		    		
 		        return instance.copQueryPoint4QT(scan, latitude, longitude,csv);			        
 		        
 		      };
 		    }, callBack);
-		    		    		    
-			long exe_time = System.currentTimeMillis()- s_time;			
+
+		    long e_time = System.currentTimeMillis();
+		    this.timePhase.add(e_time);		    					
 			
+		    long exe_time = e_time - s_time;
+			// write to csv file
+			String outStr = "";
+			outStr += "within,"+"cop,"+callBack.res.getRes().size()+","+callBack.res.getCells()+","+callBack.res.getRows()+","+
+						exe_time+","+match_time+","+this.tableSchema.getSubSpace()+",("+latitude+":"+longitude+")";	
+											
 			
-			//System.out.println("exe_time=>"+exe_time+";result=>"+callBack.res.size());		
-			String outStr = "q=point;m=>cop;"+";exe_time=>"+exe_time+";result=>"+callBack.res+
-					";match=>"+(match_time)+";subspace=>"+this.tableSchema.getSubSpace();;
-			//this.writeStat(outStr);
+			for(int i=0;i<this.timePhase.size();i++){
+				outStr += ",";
+				outStr +=this.timePhase.get(i);
+			}					
+			this.writeCSVLog(outStr, 0);
 			
-		    return callBack.res;
+		    return callBack.res.getRes().get(0);
 		    
 		}catch(Exception e){
 			e.printStackTrace();
@@ -334,7 +353,7 @@ public class BixiQuery4QT extends QueryAbstraction{
 		}finally{
 			hbase.closeTableHandler();
 			this.closeCSVLog();
-		}*/
+		}
 		
 		return null;	
 	}
@@ -345,17 +364,6 @@ public class BixiQuery4QT extends QueryAbstraction{
 		return null;
 	}
 
-	@Override
-	public void copQueryArea(double latitude, double longitude, int area) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void scanQueryArea(double latitude, double longitude, int area) {
-		// TODO Auto-generated method stub
-		
-	}
 
 	@Override
 	public void copQueryAvailableKNN(String timestamp, double latitude,
