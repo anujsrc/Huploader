@@ -19,14 +19,16 @@ public class TestHybridIndex {
     	hybrid.buildZone(XConstants.ENCODING_DECIMAL);
     	//hybrid.printZone();
     	
+    	hybrid.locate(7.9,6);
+    	
        	Hashtable<String,XBox[]> result = hybrid.match(8,6,1);
        	for(String index: result.keySet()){
        		System.out.println(index+"=>"+result.get(index)[0].toString()+";"+result.get(index)[1].toString());	
        	}
     	
-    	System.out.println(rect.getCenterX()+","+rect.getCenterY());
+/*    	System.out.println(rect.getCenterX()+","+rect.getCenterY());
     	System.out.println(rect.getMinX()+","+rect.getMinY()+","+rect.getMaxX()+","+rect.getMaxY());
-    	System.out.println(rect.getX()+";"+rect.getY());
+    	System.out.println(rect.getX()+";"+rect.getY());*/
     							
     }
 	

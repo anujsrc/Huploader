@@ -95,7 +95,7 @@ public class XRaster {
     	
     	if(x>this.m_rect.getMaxX() || x<this.m_rect.getMinX() || y>this.m_rect.getMaxY() || y<this.m_rect.getMinY())
     		return new XBox(null,null);
-    	System.out.println("interval locate: "+this.m_rect.getX() + ";"+this.m_rect.getY()+";"+this.m_rect.getWidth() + ";"+this.m_rect.getHeight());
+    	//System.out.println("interval locate: "+this.m_rect.getX() + ";"+this.m_rect.getY()+";"+this.m_rect.getWidth() + ";"+this.m_rect.getHeight());
     	
     	int row = (int) ((y-this.m_rect.getY()) / this.min_size_of_height );   	
     	int column = (int)((x - this.m_rect.getX()) / this.min_size_of_width );  		
