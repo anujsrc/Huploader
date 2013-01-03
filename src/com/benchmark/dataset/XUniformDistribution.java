@@ -24,9 +24,9 @@ import org.w3c.dom.Element;
  */
 public class XUniformDistribution {
 
+	String fileNamePrefix = "uniform";
 	
-	
-	public void generate(int number,int min, int max){	
+	public String generate(int number,int min, int max){	
 		
 		
 		double x[] = new double[number];
@@ -50,7 +50,7 @@ public class XUniformDistribution {
 		System.out.println("===normalized==and start to write=");
 		FileWriter fw = null;
 		try{
-			fw = new FileWriter("uniform.csv");
+			fw = new FileWriter(fileNamePrefix+".csv");
 			for(int i=0;i<total;i++){
 				x[i] = x[i] / (number/max);
 				y[i] = y[i] / (number/max); 
@@ -62,7 +62,7 @@ public class XUniformDistribution {
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-
+		return fileNamePrefix+".csv";
 	}	
 	
 	public static void main(String []args){

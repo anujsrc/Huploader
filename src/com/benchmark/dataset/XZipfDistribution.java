@@ -21,8 +21,9 @@ import org.apache.commons.math3.random.RandomGenerator;
 
 public class XZipfDistribution {
 
+	String fileNamePrefix = "zipf";
 	
-	public void generate(int number,int min, int max){	
+	public String generate(int number,int min, int max){	
 		
 		RandomDataImpl randomData1 = new RandomDataImpl(); 
 		double x[] = new double[number*2];
@@ -71,9 +72,9 @@ public class XZipfDistribution {
 		FileWriter xstatFile = null;
 		FileWriter ystatFile = null;
 		try{
-			fw = new FileWriter("zipf.csv");
-			xstatFile = new FileWriter("x.spc");
-			ystatFile = new FileWriter("y.spc");
+			fw = new FileWriter(fileNamePrefix+".csv");
+			xstatFile = new FileWriter(fileNamePrefix+"-x.spc");
+			ystatFile = new FileWriter(fileNamePrefix+"-y.spc");
 			xstatFile.write("m\tVm\n");
 			ystatFile.write("m\tVm\n");
 			for(int i=0;i<total;i++){
@@ -92,7 +93,7 @@ public class XZipfDistribution {
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-
+		return fileNamePrefix+".csv";
 	}
 	
 	public static void main(String []args){
