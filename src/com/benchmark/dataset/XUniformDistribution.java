@@ -9,6 +9,10 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.commons.math3.distribution.UniformIntegerDistribution;
+import org.apache.commons.math3.distribution.UniformRealDistribution;
+import org.apache.commons.math3.distribution.ZipfDistribution;
+import org.apache.commons.math3.random.RandomDataImpl;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -18,8 +22,65 @@ import org.w3c.dom.Element;
  * @author dan
  *
  */
-public class XNormalDistribution {
+public class XUniformDistribution {
 
+	
+	
+	public void generate(int number,int min, int max){	
+		
+		
+		double x[] = new double[number];
+		double y[] = new double[number];
+					
+		int total = 0;
+	
+		RandomDataImpl randomData1 = new RandomDataImpl(); 
+		RandomDataImpl randomData2 = new RandomDataImpl();	
+		randomData2.reSeed(10);
+		randomData1.reSeed(1);
+		for(int i=0;i<number;i++){										
+			x[total] = randomData1.nextUniform(0, number);
+			y[total] = randomData2.nextUniform(0, number);							
+			//System.out.println(x[total]+","+y[total]+"==="+x[total] / (number/max)+";"+y[total] / (number/max));
+			total++;																
+		}
+		
+		System.out.println(total);
+		// normailze the value into the given value range
+		System.out.println("===normalized==and start to write=");
+		FileWriter fw = null;
+		try{
+			fw = new FileWriter("uniform.csv");
+			for(int i=0;i<total;i++){
+				x[i] = x[i] / (number/max);
+				y[i] = y[i] / (number/max); 
+				fw.write(x[i] + ","+y[i]+"\n");
+				
+			}
+			fw.close();
+			
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+
+	}	
+	
+	public static void main(String []args){
+		XUniformDistribution distribution = new XUniformDistribution();
+		distribution.generate(10000000,0,100);
+	}	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 /**
  * create the simulated data
  * @param folder: where the file would be stored
