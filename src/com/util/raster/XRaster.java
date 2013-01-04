@@ -142,7 +142,7 @@ public class XRaster {
     
     public XBox[] intersect(Rectangle2D.Double rect)throws Exception{
 
-    	
+    	// normalize the rect to locate it into the same coordinate with the grid
     	double[] normalized = this.normalize(rect.getX(),rect.getY());
     	Rectangle2D.Double vRect = new Rectangle2D.Double(normalized[0],normalized[1],
     			rect.getWidth(),rect.getHeight());

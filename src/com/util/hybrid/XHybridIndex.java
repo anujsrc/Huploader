@@ -80,9 +80,8 @@ public class XHybridIndex {
         			String tileIndex = oneTile.getIndex();
         			// get the tile rect where the point is located
         	    	Rectangle2D.Double tile_rect = oneTile.getM_rect();
-        	    	Point2D.Double offsetPoint = new Point2D.Double(tile_rect.getX(),tile_rect.getY());
-        	    	//System.out.println(tile_rect.toString()+"==="+this.cell_size+"==="+offsetPoint.toString());
-        	    	XRaster grid = new XRaster(tile_rect,this.cell_size,offsetPoint);     	    	        	    	
+        	    	Point2D.Double offsetPoint = new Point2D.Double(tile_rect.getX(),tile_rect.getY());        	    	
+        	    	XRaster grid = new XRaster(tile_rect,this.cell_size,offsetPoint);          	    	
         			XBox[] range = grid.intersect(matchRect);
         			result.put(tileIndex, range);        			
         		}        		

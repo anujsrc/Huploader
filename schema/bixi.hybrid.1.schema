@@ -16,10 +16,10 @@
 	"mem_store_size":"",
 	
 	"schema":{
-		"space":"0,0,1000,1000",
+		"space":"0,0,100,100",
 		"indexing":"2",
 		"encoding":"1",
-		"tile":"100",
+		"tile":"25",
 		"subspace":"1"
 	},
 	"log_file_name":"bixi-hybrid-1"

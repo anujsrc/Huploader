@@ -15,6 +15,7 @@ import com.hbase.service.HBaseUtil;
 import com.util.XCSVFormat;
 import com.util.XConstants;
 import com.util.XTableSchema;
+import com.util.hybrid.XHybridIndex;
 import com.util.quadtree.trie.XQuadTree;
 import com.util.raster.XBox;
 import com.util.raster.XRaster;
@@ -27,7 +28,7 @@ public class CSVDataUploader {
 	XCSVFormat csvFormat = null;
 	XQuadTree quadTree = null;
 	XRaster raster = null;
-	
+	XHybridIndex hybrid = null;
 
 	/**
 	 * @throws IOException
@@ -68,8 +69,18 @@ public class CSVDataUploader {
 		if(args.length == 5)
 			batchNum = Integer.valueOf(args[4]);
 		
+		XTableSchema tableSchema = new XTableSchema(schema_desc_file);
 		
-		CSVDataUploader uploader = new CSVDataUploader(csv_desc_file,schema_desc_file,hbaseConf);
+		CSVDataUploader uploader = null;
+		
+		// this is for hybrid indexing
+		if(tableSchema.getIndexing() == XConstants.INDEX_HYBRID){
+			uploader = new Uploader4HybridIndex(csv_desc_file,schema_desc_file,hbaseConf);
+			
+		}else{ // this is for both raster and quadtree			
+			uploader = new CSVDataUploader(csv_desc_file,schema_desc_file,hbaseConf);
+		}
+		
 		System.out.println("***** Start to upload the data*********");
 		try{
 			uploader.upload(input_dir, batchNum);	
@@ -81,6 +92,25 @@ public class CSVDataUploader {
 		
 	}	
 	
+	
+	private void getConfiguration(String input_desc_file,
+			String schema_desc_file) {
+		this.tableSchema = new XTableSchema(schema_desc_file);
+		this.csvFormat = new XCSVFormat(input_desc_file);
+		this.setIndexing();
+	}
+
+	private void setHBase(String hbaseConfPath) throws IOException {
+		hbase = new HBaseUtil(hbaseConfPath);
+		HTable tableHandler = hbase.getTableHandler(this.tableSchema.getTableName());
+		
+		String bufferSize = hbase.getHBaseConfig().get("hbase.client.write.buffer");		 
+		if(bufferSize != null){
+			tableHandler.setWriteBufferSize(Long.valueOf(bufferSize));
+		}else{
+			System.out.println("Default buffer size: "+tableHandler.getWriteBufferSize());
+		}		
+	}	
 
 	/**
 	 * prepare the indexing
@@ -107,42 +137,28 @@ public class CSVDataUploader {
 				this.quadTree.buildTree(XConstants.ENCODING_DECIMAL);
 			}
 		} else if (indexing == XConstants.INDEX_RASTER) {
-			raster = new XRaster(space, min_size_of_subspace,offset);	
+			this.raster = new XRaster(space, min_size_of_subspace,offset);	
 			
-		} else {
+		} else if (indexing == XConstants.INDEX_HYBRID){			
+			System.out.print("initialize hybrid");
+			this.hybrid = new XHybridIndex(space,this.tableSchema.getTileSize(),offset,min_size_of_subspace);
+			this.hybrid.buildZone(encoding);
+			
+		}else{
 			System.out.println("Indexing parameter is error!");
 		}
 	}
 
-	private void getConfiguration(String input_desc_file,
-			String schema_desc_file) {
-		this.tableSchema = new XTableSchema(schema_desc_file);
-		this.csvFormat = new XCSVFormat(input_desc_file);
-		this.setIndexing();
-	}
-
-	public void setHBase(String hbaseConfPath) throws IOException {
-		hbase = new HBaseUtil(hbaseConfPath);
-		HTable tableHandler = hbase.getTableHandler(this.tableSchema.getTableName());
-		
-		String bufferSize = hbase.getHBaseConfig().get("hbase.client.write.buffer");		 
-		if(bufferSize != null){
-			tableHandler.setWriteBufferSize(Long.valueOf(bufferSize));
-		}else{
-			System.out.println("Default buffer size: "+tableHandler.getWriteBufferSize());
-		}
-		
-	}
 
 	/**
 	 * These three variable are to locate the index of langitude, 
 	 * longitude, and id which are used to calcuate the rowkey,column id, and version
 	 */
-	private int lan_index = -1;
-	private int long_index = -1;
-	private int id_index = -1; 
+	protected int lan_index = -1;
+	protected int long_index = -1;
+	protected int id_index = -1; 
 	
-	private void locateKeyIndicator(){
+	protected void locateKeyIndicator(){
 		System.out.println("start to locate the key indicator");
 		String[] columns = this.csvFormat.getColumns();
 		for(int i=0;i<columns.length;i++){
@@ -163,8 +179,11 @@ public class CSVDataUploader {
 		System.out.println("id=>"+id_index+";lan=>"+lan_index+";long=>"+long_index);
 	}
 	
-	/*
+	/**
 	 * workflow of this function: 1 read the csv data, and put into hbase, then close hbase
+	 * @param input_dir
+	 * @param batchNum
+	 * @throws Exception
 	 */
 	public void upload(String input_dir, int batchNum) throws Exception{
 		// read the file,
@@ -271,7 +290,7 @@ public class CSVDataUploader {
 	 *  
 	 * @return string array including: row key, column key and version
 	 */
-	private String[] getCellIndicator(String lan, String longitude,String id){		
+	protected String[] getCellIndicator(String lan, String longitude,String id){		
 		if(lan == null || longitude == null)
 			return null;
 		String indicator[] = new String[3];		
@@ -297,7 +316,7 @@ public class CSVDataUploader {
 	 * @param values
 	 * @return
 	 */
-	private String getCellValue(String values[],ArrayList<String> filter){	
+	protected String getCellValue(String values[],ArrayList<String> filter){	
 		String metaData = null;
 		try{
 			String[] columns = this.csvFormat.getColumns();

@@ -149,7 +149,7 @@ public abstract class QueryAbstraction {
 			raster = new XRaster(space, min_size_of_subspace,offset);	
 			
 		} else if(indexing == XConstants.INDEX_HYBRID){
-			this.hybrid = new XHybridIndex(space,this.tableSchema.getTileSize(),offset,1);
+			this.hybrid = new XHybridIndex(space,this.tableSchema.getTileSize(),offset,min_size_of_subspace);
 			this.hybrid.buildZone(encoding);
 		}
 	}

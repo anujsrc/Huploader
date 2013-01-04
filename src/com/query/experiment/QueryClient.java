@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Properties;
 
 import com.query.QueryAbstraction;
+import com.query.bixi.BixiQuery4Hybrid;
 import com.query.bixi.BixiQuery4QT;
 import com.query.bixi.BixiQuery4Raster;
 import com.util.XConstants;
@@ -57,6 +58,12 @@ public class QueryClient {
 				client.callScanQueryAvailable(property);
 			}else if(implement == 1){
 				client.callCopQueryAvailable(property);
+			}			
+		}else if(query == 2){ // knn
+			if(implement == 0){ // scan
+				client.callScanQueryKNN(property);
+			}else if(implement == 1){
+				client.callCopQueryKNN(property);
 			}
 			
 		}else if(query == 1){ // point query
@@ -66,13 +73,6 @@ public class QueryClient {
 			}else if(implement == 1){
 				client.callCopQueryPoint(property);
 			}		
-			
-		}else if(query == 2){ // knn
-			if(implement == 0){ // scan
-				client.callScanQueryKNN(property);
-			}else if(implement == 1){
-				client.callCopQueryKNN(property);
-			}			
 			
 		}else{
 			System.out.println("query parameter is wrong");
@@ -95,6 +95,8 @@ public class QueryClient {
 				queryEngine = new BixiQuery4QT(tableSchema,csv_desc_file,hbase_conf);
 			}else if(tableSchema.getIndexing() == XConstants.INDEX_RASTER){
 				queryEngine = new BixiQuery4Raster(tableSchema,csv_desc_file,hbase_conf);
+			}else if(tableSchema.getIndexing() == XConstants.INDEX_HYBRID){
+				queryEngine = new BixiQuery4Hybrid(tableSchema,csv_desc_file,hbase_conf);
 			}
 		}	
 		return queryEngine;
