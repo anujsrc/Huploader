@@ -84,14 +84,11 @@ public class BixiQuery4QT extends QueryAbstraction{
 		    /**Step2*** generate scan***/ 
 			// build up a quadtree.
 			long s_time = System.currentTimeMillis();
-			this.timePhase.add(s_time);			
-			
-			double x = latitude - radius;
-			double y = longitude - radius;								   
+			this.timePhase.add(s_time);										   
 			// match rect to find the subspace it belongs to
 			
 			long match_s = System.currentTimeMillis();
-			List<String> indexes = this.quadTree.match(x,y,radius);
+			List<String> indexes = this.quadTree.match(latitude,longitude,radius);
 			long match_time = System.currentTimeMillis() - match_s;			
 			
 			// prepare filter for scan
@@ -175,8 +172,6 @@ public class BixiQuery4QT extends QueryAbstraction{
 		
 		this.timePhase.add(System.currentTimeMillis());
 		longitude = Math.abs(longitude);
-		double x = latitude - radius;
-		double y = longitude - radius;
 		Point2D.Double point = new Point2D.Double(latitude,longitude);
 		ResultScanner rScanner = null;
 		//result container
@@ -187,7 +182,7 @@ public class BixiQuery4QT extends QueryAbstraction{
 			
 			// match rect to find the subspace it belongs to
 			long match_s = System.currentTimeMillis();
-			List<String> indexes = quadTree.match(x,y,radius);
+			List<String> indexes = quadTree.match(latitude,longitude,radius);
 			long match_time = System.currentTimeMillis() - match_s;
 			// prepare filter for scan
 			FilterList fList = new FilterList(FilterList.Operator.MUST_PASS_ONE);
@@ -223,9 +218,11 @@ public class BixiQuery4QT extends QueryAbstraction{
 					double distance = resPoint.distance(point);
 					
 					if(distance <= radius){						
-						//System.out.println("row=>"+Bytes.toString(r.getRow()) + ";colum=>"+Bytes.toString(kv.getQualifier())+ ";station=>"+station.getId());
+						//System.out.println("row=>"+Bytes.toString(r.getRow()) + ";colum=>"+Bytes.toString(kv.getQualifier())+";station=>"+Bytes.toString(kv.getQualifier())+";distance=>"+distance+";lat=>"+key_value.get("lat")+";long=>"+key_value.get("long"));
 						results.put(Bytes.toString(kv.getQualifier()), String.valueOf(distance));
 						accepted++;
+					}else{
+						//System.out.println("Discarded: row=>"+Bytes.toString(r.getRow()) + ";colum=>"+Bytes.toString(kv.getQualifier())+";station=>"+Bytes.toString(kv.getQualifier())+";distance=>"+distance+";lat=>"+key_value.get("lat")+";long=>"+key_value.get("long"));
 					}
 						
 				}

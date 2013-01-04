@@ -190,6 +190,7 @@ public class BixiQuery4Raster extends QueryAbstraction{
 							double distance = resPoint.distance(point);
 
 							if (distance <= radius) {
+								//System.out.println("row=>"+Bytes.toString(r.getRow()) + ";colum=>"+Bytes.toString(col)+";station=>"+key_values.get("id")+";distance=>"+distance+";latitude=>"+key_values.get("lat")+";long=>"+key_values.get("long"));
 								accepted++;
 								results.put(key_values.get("id"),String.valueOf(distance));
 							}

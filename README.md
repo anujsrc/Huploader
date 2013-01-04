@@ -40,7 +40,14 @@ slf4j-log4j12-1.4.3.jar
 zookeeper-3.4.3.jar
 
 
+=========Descrription of Experiment=======
+1 Generate the fake Bixi data with both Uniform Distribution and Zipf Distribution
 
+2 Create the table schema with the given table schema format
+
+3 Upload the data into HBase with the given table schema
+
+4 Execute the queries to get the query metrics under that table schema
 
 
 

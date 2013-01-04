@@ -16,6 +16,7 @@ import com.hbase.service.StatUtil;
 import com.util.XCSVFormat;
 import com.util.XConstants;
 import com.util.XTableSchema;
+import com.util.hybrid.XHybridIndex;
 import com.util.log.XLogCSV;
 import com.util.log.XLogConst;
 import com.util.quadtree.trie.XQuadTree;
@@ -28,6 +29,7 @@ public abstract class QueryAbstraction {
 	protected XTableSchema tableSchema = null;	
 	protected XQuadTree quadTree = null;
 	protected XRaster raster = null;
+	protected XHybridIndex hybrid = null;
 	protected XCSVFormat csvFormat = null;
 	
 	// For log 
@@ -129,7 +131,7 @@ public abstract class QueryAbstraction {
 		Rectangle2D.Double space = this.tableSchema.getEntireSpace();
 		Point2D.Double offset = this.tableSchema.getOffset();
 				
-		double min_size_of_subspace = this.tableSchema.getSubSpace();
+		double min_size_of_subspace = this.tableSchema.getSubSpace();		
 		int indexing = this.tableSchema.getIndexing();
 		int encoding = this.tableSchema.getEncoding();
 		
@@ -146,8 +148,9 @@ public abstract class QueryAbstraction {
 		} else if (indexing == XConstants.INDEX_RASTER) {
 			raster = new XRaster(space, min_size_of_subspace,offset);	
 			
-		} else {
-			System.out.println("Indexing parameter is error!");
+		} else if(indexing == XConstants.INDEX_HYBRID){
+			this.hybrid = new XHybridIndex(space,this.tableSchema.getTileSize(),offset,1);
+			this.hybrid.buildZone(encoding);
 		}
 	}
 	

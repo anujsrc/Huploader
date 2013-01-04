@@ -21,6 +21,7 @@ public class XHBaseConstant {
 	public static String TABLE_DESC_INDEXING = "indexing";
 	public static String TABLE_DESC_ENCODING = "encoding";
 	public static String TABLE_DESC_SUBSPACE = "subspace";
+	public static String TABLE_DESC_TILE = "tile";
 	public static String TABLE_DESC_OFFSET = "offset";
 	
 	

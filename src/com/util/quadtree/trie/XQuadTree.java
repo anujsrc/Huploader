@@ -196,17 +196,17 @@ public class XQuadTree {
             return this;
         }
     }  
-
     /**
      * This is to find the subspace for the area which is defined by a point and a distance
      * Query: It is used to process the query which is to get the points within a certain distance of the given point 
-     * @param item
-     * @return the index(es) of subspaces
+     * @param x: x coordinate of the centre point
+     * @param y: y coordinate of the centre point
+     * @param radius: 
+     * @return
      */
     public List<String> match(double x,double y, double radius){
-    	double[] normalized = this.normalize(x, y);
-    	
-    	Rectangle2D.Double rect = new Rectangle2D.Double(normalized[0]-radius,normalized[1]-radius,2*radius,2*radius);
+    	double[] normalized = this.normalize(x, y);    	    	
+    	Rectangle2D.Double rect = new Rectangle2D.Double(normalized[0]-radius,normalized[1]-radius,2*radius,2*radius);    	
         // If this quad doesn't intersect the items rectangle, do nothing
         if (!m_rect.intersects(rect)
         		&& !m_rect.contains(new Point2D.Double(rect.getX(),rect.getY()))){        	

@@ -22,6 +22,7 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.BinaryComparator;
+import org.apache.hadoop.hbase.filter.ColumnRangeFilter;
 import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
 import org.apache.hadoop.hbase.filter.Filter;
@@ -505,7 +506,13 @@ public class HBaseUtil {
 		}
 		return operator;
 	}
-	
+	/**
+	 * row filter
+	 * @param compareOp
+	 * @param regex
+	 * @return
+	 * @throws Exception
+	 */
 	public Filter getSubStringFilter(String compareOp, String regex) throws Exception{
 		CompareOp operator = matchCompareOperation(compareOp);		
 		return new RowFilter(operator,new SubstringComparator(regex));
@@ -514,6 +521,15 @@ public class HBaseUtil {
 	public Filter getBinaryFilter(String compareOp, String rowkey) throws Exception{
 		CompareOp operator = matchCompareOperation(compareOp);		
 		return new RowFilter(operator,new BinaryComparator(rowkey.getBytes()));
+	}
+	/**
+	 * Column Range Filter
+	 * @param prefix
+	 * @return
+	 * @throws Exception
+	 */
+	public Filter getColumnRangeFilter(byte[] minColumn, boolean minColumnInclusive, byte[] maxColumn, boolean maxColumnInclusive) throws Exception{		
+		return new ColumnRangeFilter(minColumn,minColumnInclusive,maxColumn,maxColumnInclusive);
 	}
 	
 	

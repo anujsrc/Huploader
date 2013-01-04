@@ -12,6 +12,7 @@ public class XConstants {
 	
 	public static int INDEX_QUAD_TREE = 0;
 	public static int INDEX_RASTER = 1;
+	public static int INDEX_HYBRID = 2;
 	
 	public static int ENCODING_BINARY = 0;
 	public static int ENCODING_DECIMAL = 1;

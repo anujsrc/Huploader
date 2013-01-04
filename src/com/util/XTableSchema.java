@@ -141,6 +141,18 @@ public class XTableSchema {
 		}
 	}
 	/**
+	 * Used in Hybrid indexing
+	 * @return
+	 */
+	public double getTileSize(){
+		JSONObject schema = getSchemaObject();
+		if(schema.containsKey(XHBaseConstant.TABLE_DESC_TILE)){
+			return java.lang.Double.valueOf((String)schema.get(XHBaseConstant.TABLE_DESC_TILE));
+		}else{
+			return -1;
+		}
+	}	
+	/**
 	 * used in indexing.
 	 * @return
 	 */
