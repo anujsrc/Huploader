@@ -53,6 +53,22 @@ public class XTableSchema {
 		return prefix;		
 	}
 	
+	public long getTotalNumberOfPoints(){
+		
+		long totalNum = -1;
+		try{
+			if(this.table != null){
+				if(this.table.containsKey(XHBaseConstant.TOTAL_NUMBER_OF_POINTS)){
+					totalNum = (Long)(this.table.get(XHBaseConstant.TOTAL_NUMBER_OF_POINTS));
+				}
+			}
+			
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		return totalNum;		
+	}	
+	
 	
 	/**
 	 * get the family item in the table schema 

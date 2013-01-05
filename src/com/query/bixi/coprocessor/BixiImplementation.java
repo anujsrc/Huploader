@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
+import java.util.NavigableMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -145,6 +147,9 @@ public class BixiImplementation extends BaseEndpointCoprocessor implements BixiP
 		return results;			
 	}
 	
+	public RCopResult copQueryKNN4QT(Scan scan,double latitude,double longitude,XCSVFormat csv)throws IOException{
+		return null;
+	}
 	
 	
 	/******************For Location Schema2* Raster******************************/
@@ -152,7 +157,7 @@ public class BixiImplementation extends BaseEndpointCoprocessor implements BixiP
 	public RCopResult copQueryNeighbor4Raster(Scan scan,double latitude,double longitude,double radius,XCSVFormat csv)throws IOException{
 		
 		long sTime = System.currentTimeMillis();
-		System.out.println(sTime+": in the copQueryNeighbor4LS2....");
+		System.out.println(sTime+": in the copQueryNeighbor4Raster....");
 		/**Step1: get internalScanner***/
 		InternalScanner scanner = ((RegionCoprocessorEnvironment) getEnvironment()).getRegion().getScanner(scan);
 		List<KeyValue> keyvalues = new ArrayList<KeyValue>();
@@ -270,5 +275,97 @@ public class BixiImplementation extends BaseEndpointCoprocessor implements BixiP
 		return results;		
 	}
 	
+	public RCopResult copQueryKNN4Raster(Scan scan,double latitude,double longitude,XCSVFormat csv)throws IOException{
+		return null;
+	}
+	
+	
+	
+	/******************For Location Schema2* Raster******************************/	
+	public RCopResult copQueryNeighbor4Hybrid(Scan scan,double latitude,double longitude,double radius,XCSVFormat csv)throws IOException{
+		
+		long sTime = System.currentTimeMillis();
+		System.out.println(sTime+": in the copQueryNeighbor4Hybrid....");
+		/**Step1: get internalScanner***/
+		InternalScanner scanner = ((RegionCoprocessorEnvironment) getEnvironment()).getRegion().getScanner(scan);
+		List<KeyValue> keyvalues = new ArrayList<KeyValue>();
+		RCopResult results = new RCopResult();
+		boolean hasMoreResult = false;		
+		Point2D.Double point = new Point2D.Double(latitude,longitude);
+		
+		/**Step2: iterate the scan result ***/
+		int row = 0;
+		int cell = 0;		
+		int kvLength = 0;
+		try {
+			do {
+				hasMoreResult = scanner.next(keyvalues);
+				if(keyvalues != null && keyvalues.size() > 0){	
+					row++;	
+					
+					String id = null;
+					double lat = -1;
+					double lon = -1;
+															
+					for(KeyValue kv:keyvalues){
+						//System.out.println(Bytes.toString(kv.getRow())+"=>"+Bytes.toString(kv.getValue()));
+						cell++;	
+						
+						kvLength = (kvLength*7 < kv.getLength()*7)? kv.getLength()*7:kvLength*7;
+						
+						// get the distance between this point and the given point	
+						if(kv.getTimestamp() == 1){
+							id = Bytes.toString(kv.getValue());
+						}else if(kv.getTimestamp() == 2){
+							lat = java.lang.Double.valueOf(Bytes.toString(kv.getValue()));
+						}else if(kv.getTimestamp() == 3){
+							lon = java.lang.Double.valueOf(Bytes.toString(kv.getValue()));
+						}
+						
+						// one column 
+						if(cell % 7 == 0){ // 7 means the number of versions
+							Point2D.Double resPoint = new Point2D.Double(lat,lon);									
+							double distance = resPoint.distance(point);
+
+							if (distance <= radius) {										
+								results.getRes().add(id);
+							}
+							
+							id = null;
+							lat = -1;
+							lon = -1;
+						}											
+
+					}
+				}								
+				keyvalues.clear();				
+				
+			} while (hasMoreResult);
+			
+			long eTime = System.currentTimeMillis();
+			results.setStart(sTime);
+			results.setEnd(eTime);
+			results.setRows(row);
+			results.setCells(cell);
+			results.setKvLength(kvLength);
+			results.setParameter(String.valueOf(radius));
+						
+			
+		}catch(Exception e){
+			e.printStackTrace();
+		} finally {
+			scanner.close();
+		}
+						
+		return results;	
+	}
+	
+	public RCopResult copQueryPoint4Hybrid(Scan scan,double latitude,double longitude,XCSVFormat csv)throws IOException{
+		return null;
+	}
+	
+	public RCopResult copQueryKNN4Hybrid(Scan scan,double latitude,double longitude,XCSVFormat csv)throws IOException{
+		return null;
+	}
 
 }

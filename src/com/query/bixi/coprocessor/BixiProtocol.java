@@ -18,10 +18,16 @@ public interface BixiProtocol extends CoprocessorProtocol {
   /*******************For location Schema1**QuadTree************************/
   RCopResult copQueryNeighbor4QT(Scan scan,double latitude,double longitude,double radius,XCSVFormat csv)throws IOException;
   RCopResult copQueryPoint4QT(Scan scan,double latitude,double longitude,XCSVFormat csv)throws IOException;
+  RCopResult copQueryKNN4QT(Scan scan,double latitude,double longitude,XCSVFormat csv)throws IOException;
   
-  /*******************For location Schema2**************************/
+  
+  /*******************For location Schema2**Raster************************/
   RCopResult copQueryNeighbor4Raster(Scan scan,double latitude,double longitude,double radius,XCSVFormat csv)throws IOException;
   RCopResult copQueryPoint4Raster(Scan scan,double latitude,double longitude,XCSVFormat csv)throws IOException;
+  RCopResult copQueryKNN4Raster(Scan scan,double latitude,double longitude,XCSVFormat csv)throws IOException;
   
-  
+  /*******************For location Schema2**Hybrid************************/
+  RCopResult copQueryNeighbor4Hybrid(Scan scan,double latitude,double longitude,double radius,XCSVFormat csv)throws IOException;
+  RCopResult copQueryPoint4Hybrid(Scan scan,double latitude,double longitude,XCSVFormat csv)throws IOException;
+  RCopResult copQueryKNN4Hybrid(Scan scan,double latitude,double longitude,XCSVFormat csv)throws IOException;
 }

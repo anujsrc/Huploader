@@ -26,6 +26,7 @@ public class XHBaseConstant {
 	
 	
 	public static String TABLE_DESC_LOG_NAME_PREFIX = "log_file_name";
+	public static String TOTAL_NUMBER_OF_POINTS = "num_of_points";
 	
 	
 }

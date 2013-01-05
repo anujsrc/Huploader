@@ -21,7 +21,7 @@
 		"encoding":"0",
 		"subspace":"1"
 	},
-	
+	"num_of_points":10000,
 	"log_file_name":"bixi-qt-be-1"
 
 }
