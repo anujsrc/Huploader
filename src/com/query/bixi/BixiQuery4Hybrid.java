@@ -225,6 +225,10 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 					longitude, radius);
 			long match_time = System.currentTimeMillis() - match_s;
 
+			for(String row:result.keySet()){
+				System.out.println(row+"==>"+result.get(row)[0].toString()+";"+result.get(row)[1].toString());
+			}
+			
 			// format the key ranges and column ranges
 			Hashtable<String, String[]> organizedKeys = this
 					.reOrganizeKeys(result);
@@ -249,15 +253,14 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 					// the column name is the combination of columnId and Object
 					// Id. This is to avoid using the version dimension to store
 					// the objects
-					// Filter columnFilter =
-					// hbase.getColumnRangeFilter((result.get(s)[0].getColumn()+"-").getBytes(),true,
-					// (result.get(s)[0].getColumn()+"-*").getBytes(),true);
+					//System.out.println(top+ ";"+down+";==="+result.get(s)[0].getColumn()+";"+result.get(s)[1].getColumn());
+					Filter columnFilter =hbase.getColumnRangeFilter((result.get(s)[0].getColumn()+"-").getBytes(),true,(result.get(s)[1].getColumn()+1+"-").getBytes(),true);
 
-					FilterList subList = new FilterList(
-							FilterList.Operator.MUST_PASS_ALL);
-					// subList.addFilter(columnFilter);
+					FilterList subList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
+					subList.addFilter(columnFilter);					
 					subList.addFilter(rowTopFilter);
 					subList.addFilter(rowDownFilter);
+					
 
 					fList.addFilter(subList);
 				}
@@ -298,7 +301,10 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 
 						Point2D.Double resPoint = new Point2D.Double(lat, lon);
 						double distance = resPoint.distance(point);
-
+						if(id.equals("s6039") || id.equals("s5677") || id.equals("s5760")){
+							System.out.println(Bytes.toString(r.getRow())+"=="+Bytes.toString(col)+";"+distance);
+						}
+						
 						if (distance <= radius) {
 							// System.out.println("row=>"+Bytes.toString(r.getRow())
 							// +
@@ -407,8 +413,7 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 						String top = s + "-" + result.get(s)[0].getRow();
 						String down = s + "-" + result.get(s)[1].getRow();
 						Filter rowTopFilter = hbase.getBinaryFilter(">=", top);
-						Filter rowDownFilter = hbase
-								.getBinaryFilter("<=", down);
+						Filter rowDownFilter = hbase.getBinaryFilter("<=", down);
 
 						FilterList subList = new FilterList(
 								FilterList.Operator.MUST_PASS_ALL);
