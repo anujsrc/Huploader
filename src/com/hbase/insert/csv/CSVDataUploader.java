@@ -258,6 +258,7 @@ public class CSVDataUploader {
 				if (putList.size() > 0) {
 					hbase.flushBufferedRow(putList);
 					totalRow += putList.size();
+					System.out.println("inserted row=> "+totalRow);
 					putList.clear();
 				}
 				file_num++;

@@ -129,6 +129,12 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 
 			// prepare filter for scan
 			FilterList fList = new FilterList(FilterList.Operator.MUST_PASS_ONE);
+			List<Long> timestamps = new ArrayList<Long>();
+			timestamps.add(Long.valueOf(1));
+			timestamps.add(Long.valueOf(2));
+			timestamps.add(Long.valueOf(3));
+			Filter timestampFilter = hbase.getTimeStampFilter(timestamps);
+			
 			for (String s : result.keySet()) {
 				if (s != null) {
 					String top = s + "-" + result.get(s)[0].getRow();
@@ -146,6 +152,7 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 					subList.addFilter(columnFilter);
 					subList.addFilter(rowTopFilter);
 					subList.addFilter(rowDownFilter);
+					subList.addFilter(timestampFilter);
 
 					fList.addFilter(subList);
 				}
@@ -242,6 +249,11 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 
 			// prepare filter for scan
 			FilterList fList = new FilterList(FilterList.Operator.MUST_PASS_ONE);
+			List<Long> timestamps = new ArrayList<Long>();
+			timestamps.add(Long.valueOf(1));
+			timestamps.add(Long.valueOf(2));
+			timestamps.add(Long.valueOf(3));
+			Filter timestampFilter = hbase.getTimeStampFilter(timestamps);
 			for (String s : result.keySet()) {
 				if (s != null) {
 					String top = s + "-" + result.get(s)[0].getRow();
@@ -258,7 +270,7 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 					subList.addFilter(columnFilter);					
 					subList.addFilter(rowTopFilter);
 					subList.addFilter(rowDownFilter);
-					
+					subList.addFilter(timestampFilter);
 					fList.addFilter(subList);
 				}
 			}
@@ -298,9 +310,6 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 
 						Point2D.Double resPoint = new Point2D.Double(lat, lon);
 						double distance = resPoint.distance(point);
-						if(id.equals("s6039") || id.equals("s5677") || id.equals("s5760")){
-							System.out.println(Bytes.toString(r.getRow())+"=="+Bytes.toString(col)+";"+distance);
-						}
 						
 						if (distance <= radius) {
 							// System.out.println("row=>"+Bytes.toString(r.getRow())
@@ -448,6 +457,11 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 				// prepare filter for scan
 				FilterList fList = new FilterList(
 						FilterList.Operator.MUST_PASS_ONE);
+				List<Long> timestamps = new ArrayList<Long>();
+				timestamps.add(Long.valueOf(1));
+				timestamps.add(Long.valueOf(2));
+				timestamps.add(Long.valueOf(3));
+				Filter timestampFilter = hbase.getTimeStampFilter(timestamps);
 				for (String s : result.keySet()) {
 					if (s != null) {
 						String top = s + "-" + result.get(s)[0].getRow();
@@ -462,7 +476,7 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 						subList.addFilter(rowTopFilter);
 						subList.addFilter(rowDownFilter);
 						subList.addFilter(columnFilter);
-
+						subList.addFilter(timestampFilter);
 						fList.addFilter(subList);
 					}
 				}
@@ -591,6 +605,11 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 				// prepare filter for scan
 				FilterList fList = new FilterList(
 						FilterList.Operator.MUST_PASS_ONE);
+				List<Long> timestamps = new ArrayList<Long>();
+				timestamps.add(Long.valueOf(1));
+				timestamps.add(Long.valueOf(2));
+				timestamps.add(Long.valueOf(3));
+				Filter timestampFilter = hbase.getTimeStampFilter(timestamps);
 				for (String s : result.keySet()) {
 					if (s != null) {
 						String top = s + "-" + result.get(s)[0].getRow();
@@ -605,7 +624,7 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 						subList.addFilter(rowTopFilter);
 						subList.addFilter(rowDownFilter);
 						subList.addFilter(columnFilter);
-
+						subList.addFilter(timestampFilter);
 						fList.addFilter(subList);
 					}
 				}

@@ -8,7 +8,7 @@
 	  "blocksize":"",
 	  "in_memory":"",
 	  "blockcache":"true",
-	  "bloomfilter":"",
+	  "bloomfilter":"ROWCOL",
 	  "replication_scope":""
 	}
 	],
