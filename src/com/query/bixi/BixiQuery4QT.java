@@ -411,10 +411,10 @@ public class BixiQuery4QT extends QueryAbstraction {
 	}
 
 	@Override
-	public void copQueryAvailableKNN(String timestamp, double latitude,
+	public HashMap<String,Double> copQueryAvailableKNN(String timestamp, double latitude,
 			double longitude, int n) {
-		// TODO Auto-generated method stub
-
+		
+		return null;
 	}
 
 	@Override

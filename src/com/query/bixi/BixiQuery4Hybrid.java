@@ -1,6 +1,7 @@
 package com.query.bixi;
 
 import java.awt.geom.Point2D;
+import java.awt.geom.Point2D.Double;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,7 +42,7 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 
 	@Override
 	public List<String> copQueryAvailableNear(String timestamp,
-			final double latitude, final double longitude, final double radius) {
+			double latitude, double longitude, final double radius) {
 		try {
 			// create the log file
 			this.getCSVLog(0);
@@ -107,8 +108,10 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 
 			// match rect to find the subspace it belongs to
 			long match_s = System.currentTimeMillis();
-			Hashtable<String, XBox[]> result = this.hybrid.match(latitude,
-					longitude, radius);
+			final double x = Math.abs(latitude);
+			final double y = Math.abs(longitude);
+			Hashtable<String, XBox[]> result = this.hybrid.match(x,
+					y, radius);
 			long match_time = System.currentTimeMillis() - match_s;
 
 			// format the key ranges and column ranges
@@ -135,13 +138,12 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 					// the column name is the combination of columnId and Object
 					// Id. This is to avoid using the version dimension to store
 					// the objects
-					// Filter columnFilter =
-					// hbase.getColumnRangeFilter((result.get(s)[0].getColumn()+"-").getBytes(),true,
-					// (result.get(s)[0].getColumn()+"-*").getBytes(),true);
+					Filter columnFilter =hbase.getColumnRangeFilter((result.get(s)[0].getColumn()+"-").getBytes(),true,
+					(result.get(s)[1].getColumn()+1+"-").getBytes(),true);
 
 					FilterList subList = new FilterList(
 							FilterList.Operator.MUST_PASS_ALL);
-					// subList.addFilter(columnFilter);
+					subList.addFilter(columnFilter);
 					subList.addFilter(rowTopFilter);
 					subList.addFilter(rowDownFilter);
 
@@ -168,7 +170,7 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 								throws IOException {
 
 							return instance.copQueryNeighbor4Hybrid(scan,
-									latitude, longitude, radius, csv);
+									x, y, radius, csv);
 
 						};
 					}, callBack);
@@ -224,10 +226,6 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 			Hashtable<String, XBox[]> result = this.hybrid.match(latitude,
 					longitude, radius);
 			long match_time = System.currentTimeMillis() - match_s;
-
-			for(String row:result.keySet()){
-				System.out.println(row+"==>"+result.get(row)[0].toString()+";"+result.get(row)[1].toString());
-			}
 			
 			// format the key ranges and column ranges
 			Hashtable<String, String[]> organizedKeys = this
@@ -261,7 +259,6 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 					subList.addFilter(rowTopFilter);
 					subList.addFilter(rowDownFilter);
 					
-
 					fList.addFilter(subList);
 				}
 			}
@@ -345,17 +342,203 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 	}
 
 	@Override
-	public void copQueryAvailableKNN(String timestamp, double latitude,
-			double longitude, int n) {
-		// TODO Auto-generated method stub
+	public HashMap<String,java.lang.Double> copQueryAvailableKNN(String timestamp, double latitude,
+			double longitude,final int n) {
+		try {
+			// create the log file
+			this.getCSVLog(0);
+			this.getCSVLog(1);
+			//
+			this.timePhase.clear();
+			/** Step1** Call back class definition **/
+
+			class BixiCallBack implements Batch.Callback<RCopResult> {
+				RCopResult res = new RCopResult();
+				int count = 0; // the number of coprocessor
+				QueryAbstraction query = null;
+
+				public BixiCallBack(QueryAbstraction query) {
+					this.query = query;
+				}
+
+				@Override
+				public void update(byte[] region, byte[] row, RCopResult result) {
+					long current = System.currentTimeMillis();
+					count++;
+					res.getDistances().putAll(result.getDistances());																	
+					res.setStart(result.getStart());
+					res.setEnd(result.getEnd());
+					res.setRows((res.getRows() + result.getRows()));
+					res.setCells(res.getCells() + result.getCells());
+					// write them into csv file
+					String outStr = "";
+					outStr += "within,"
+							+ "cop,"
+							+ result.getParameter()
+							+ ","
+							+ result.getStart()
+							+ ","
+							+ result.getEnd()
+							+ ","
+							+ current
+							+ ","
+							+ result.getRows()
+							+ ","
+							+ result.getCells()
+							+ ","
+							+ result.getKvLength()
+							+ ","
+							+ result.getRes().size()
+							+ ","
+							+ this.query.regionAndRS
+									.get(Bytes.toString(region)) + ","
+							+ Bytes.toString(region);
+					this.query.writeCSVLog(outStr, 1);
+
+				}
+			}
+
+			BixiCallBack callBack = new BixiCallBack(this);
+
+			/** Step2*** generate scan ***/
+			// build up a quadtree.
+			long s_time = System.currentTimeMillis();
+			this.timePhase.add(s_time);
+			// match rect to find the subspace it belongs to
+
+			// Step1: estimate the window circle for the first time
+			long total_points = this.tableSchema.getTotalNumberOfPoints();
+			double areaOfMBB = this.tableSchema.getEntireSpace().width
+					* this.tableSchema.getEntireSpace().height;
+			double DensityOfMBB = total_points / areaOfMBB;
+			double init_radius = Math.sqrt(n / DensityOfMBB);
+
+			final double x = Math.abs(latitude);
+			final double y = Math.abs(longitude);
+			int count = 0;
+
+			// Step2: trigger a scan to get the points based on the above window
+			int iteration = 1;
+			double radius = (init_radius > this.tableSchema.getSubSpace()) ? init_radius
+					: this.tableSchema.getSubSpace();			
+			this.timePhase.add(System.currentTimeMillis());
+
+			do {
+				String str = "iteration" + iteration + "; count=>" + count
+						+ ";radius=>" + radius;
+				System.out.println(str);
+				Hashtable<String, XBox[]> result = this.hybrid.match(latitude,
+						longitude, radius);
+
+				// prepare filter for scan
+				// format the key ranges and column ranges
+				Hashtable<String, String[]> organizedKeys = this
+						.reOrganizeKeys(result);
+				ArrayList<String> tempArray = new ArrayList<String>(
+						organizedKeys.keySet());
+				Collections.sort(tempArray);
+
+				// get the row range
+				String[] rowRange = new String[2];
+				rowRange[0] = (String) tempArray.get(0);
+				rowRange[1] = tempArray.get(tempArray.size() - 1) + "-*";
+				System.out.println("row Range: " + rowRange[0] + ","
+						+ rowRange[1]);
+
+				// prepare filter for scan
+				FilterList fList = new FilterList(
+						FilterList.Operator.MUST_PASS_ONE);
+				for (String s : result.keySet()) {
+					if (s != null) {
+						String top = s + "-" + result.get(s)[0].getRow();
+						String down = s + "-" + result.get(s)[1].getRow();
+						Filter rowTopFilter = hbase.getBinaryFilter(">=", top);
+						Filter rowDownFilter = hbase.getBinaryFilter("<=", down);
+						Filter columnFilter =hbase.getColumnRangeFilter((result.get(s)[0].getColumn()+"-").getBytes(),
+								true,(result.get(s)[1].getColumn()+1+"-").getBytes(),true);
+						
+						FilterList subList = new FilterList(
+								FilterList.Operator.MUST_PASS_ALL);
+						subList.addFilter(rowTopFilter);
+						subList.addFilter(rowDownFilter);
+						subList.addFilter(columnFilter);
+
+						fList.addFilter(subList);
+					}
+				}
+			
+				final Scan scan = hbase.generateScan(rowRange, fList,
+						new String[] { this.tableSchema.getFamilyName() }, null,
+						this.tableSchema.getMaxVersions());
+
+				System.out.println("start to send the query to coprocessor.....");
+
+				/** Step3: send request to trigger Coprocessor execution **/
+
+				final XCSVFormat csv = this.csvFormat;
+				final double estimated_radius = radius;
+				hbase.getHTable().coprocessorExec(BixiProtocol.class,
+						scan.getStartRow(), scan.getStopRow(),
+						new Batch.Call<BixiProtocol, RCopResult>() {
+
+							public RCopResult call(BixiProtocol instance)
+									throws IOException {
+
+								return instance.copQueryNeighbor4Hybrid(scan,
+										x, y, estimated_radius, csv);
+
+							};
+						}, callBack);
+			
+				radius = radius*(1+ (n*1.0/count));//init_radius * (iteration + 1);
+
+			} while (count < n && (++iteration > 0));			
+
+			long cop_end = System.currentTimeMillis();
+			this.timePhase.add(cop_end);		
+			
+			long exe_time = cop_end - s_time;
+
+			//ArrayList<Double> tempArray = new ArrayList<Double>(
+			java.lang.Double[] tempArray = (java.lang.Double[])callBack.res.getDistances().values().toArray();			
+			Collections.sort(Arrays.asList(tempArray));
+			
+			// write to csv file
+			String outStr = "";
+			outStr += "within," + "cop," + callBack.res.getRes().size() + ","
+					+ callBack.res.getCells() + "," + callBack.res.getRows()
+					+ "," + exe_time + "," + "-1" + ","
+					+ this.tableSchema.getSubSpace() + "," + radius;
+
+			for (int i = 0; i < this.timePhase.size(); i++) {
+				outStr += ",";
+				outStr += this.timePhase.get(i);
+			}
+			outStr += "," + tempArray[0] + "," + tempArray[tempArray.length-1];
+			this.writeCSVLog(outStr, 0);	
+			
+			
+			return callBack.res.getDistances();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		} catch (Throwable ee) {
+			ee.printStackTrace();
+		} finally {
+			hbase.closeTableHandler();
+			this.closeCSVLog();
+		}
+
+		return null;		
 
 	}
 
 	@Override
-	public TreeMap<Double, String> scanQueryAvailableKNN(String timestamp,
+	public TreeMap<java.lang.Double, String> scanQueryAvailableKNN(String timestamp,
 			double latitude, double longitude, int n) {
-		TreeMap<Double, String> sorted = null;
-
+		
+		TreeMap<java.lang.Double, String> sorted = null;
+		
 		try {
 
 			this.getCSVLog(0);
@@ -414,11 +597,14 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 						String down = s + "-" + result.get(s)[1].getRow();
 						Filter rowTopFilter = hbase.getBinaryFilter(">=", top);
 						Filter rowDownFilter = hbase.getBinaryFilter("<=", down);
-
+						Filter columnFilter =hbase.getColumnRangeFilter((result.get(s)[0].getColumn()+"-").getBytes(),
+								true,(result.get(s)[1].getColumn()+1+"-").getBytes(),true);
+						
 						FilterList subList = new FilterList(
 								FilterList.Operator.MUST_PASS_ALL);
 						subList.addFilter(rowTopFilter);
 						subList.addFilter(rowDownFilter);
+						subList.addFilter(columnFilter);
 
 						fList.addFilter(subList);
 					}
@@ -472,11 +658,11 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 			// get the top K
 			Point2D.Double point = new Point2D.Double(latitude, longitude);
 			// result container
-			HashMap<Double, String> distanceMap = new HashMap<Double, String>();
+			HashMap<java.lang.Double, String> distanceMap = new HashMap<java.lang.Double, String>();
 			for (String key : results.keySet()) {
 
-				Point2D.Double resPoint = new Point2D.Double(Double.valueOf(
-						results.get(key)[0]).doubleValue(), Double.valueOf(
+				Point2D.Double resPoint = new Point2D.Double(java.lang.Double.valueOf(
+						results.get(key)[0]).doubleValue(), java.lang.Double.valueOf(
 						results.get(key)[1]).doubleValue());
 				double distance = resPoint.distance(point);
 				distanceMap.put(distance, key);
@@ -485,7 +671,7 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 			long eTime = System.currentTimeMillis();
 			this.timePhase.add(System.currentTimeMillis());
 
-			sorted = new TreeMap<Double, String>(distanceMap);
+			sorted  = new TreeMap<java.lang.Double, String>(distanceMap);
 
 			System.out.println("all values: " + sorted.values().toString());
 			// write to csv file

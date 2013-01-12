@@ -1,7 +1,6 @@
 package com.benchmark.dataset;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 
@@ -36,8 +35,7 @@ public class XBixiGenerator {
 			FileWriter fw = new FileWriter(outputFile);
 			FileReader fr = new FileReader(distributionFile);
 			BufferedReader br = new BufferedReader(fr);	
-			String line = br.readLine();
-			System.out.println(line);
+			String line = br.readLine();			
 			int uid = 0;
 			System.out.println("start to generate Bixi data...");
 			while(line != null && !line.isEmpty()){

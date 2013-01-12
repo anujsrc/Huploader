@@ -2,6 +2,7 @@ package com.query;
 
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.geom.Point2D.Double;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -280,7 +281,7 @@ public abstract class QueryAbstraction {
 	 * @param longitude
 	 * @param radius
 	 */
-	public abstract void copQueryAvailableKNN(String timestamp,
+	public abstract HashMap<String,java.lang.Double> copQueryAvailableKNN(String timestamp,
 			final double latitude, final double longitude,final int n);
 	
 	/**
@@ -291,7 +292,7 @@ public abstract class QueryAbstraction {
 	 * @param longitude
 	 * @param radius
 	 */
-	public abstract TreeMap<Double,String> scanQueryAvailableKNN(String timestamp,
+	public abstract TreeMap<java.lang.Double,String> scanQueryAvailableKNN(String timestamp,
 			double latitude, double longitude,int n);	
 
 	

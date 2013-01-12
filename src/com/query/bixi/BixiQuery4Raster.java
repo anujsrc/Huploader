@@ -3,6 +3,8 @@ package com.query.bixi;
 import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
@@ -13,6 +15,8 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
+import org.apache.hadoop.hbase.filter.Filter;
+import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import com.query.QueryAbstraction;
@@ -392,9 +396,170 @@ public class BixiQuery4Raster extends QueryAbstraction {
 	}
 
 	@Override
-	public void copQueryAvailableKNN(String timestamp, double latitude,
+	public HashMap<String,Double> copQueryAvailableKNN(String timestamp, double latitude,
 			double longitude, int n) {
+		
+		try {
+			// create the log file
+			this.getCSVLog(0);
+			this.getCSVLog(1);
+			//
+			this.timePhase.clear();
+			/** Step1** Call back class definition **/
 
+			class BixiCallBack implements Batch.Callback<RCopResult> {
+				RCopResult res = new RCopResult();
+				int count = 0; // the number of coprocessor
+				QueryAbstraction query = null;
+
+				public BixiCallBack(QueryAbstraction query) {
+					this.query = query;
+				}
+
+				@Override
+				public void update(byte[] region, byte[] row, RCopResult result) {
+					long current = System.currentTimeMillis();
+					count++;
+					res.getDistances().putAll(result.getDistances());																	
+					res.setStart(result.getStart());
+					res.setEnd(result.getEnd());
+					res.setRows((res.getRows() + result.getRows()));
+					res.setCells(res.getCells() + result.getCells());
+					// write them into csv file
+					String outStr = "";
+					outStr += "within,"
+							+ "cop,"
+							+ result.getParameter()
+							+ ","
+							+ result.getStart()
+							+ ","
+							+ result.getEnd()
+							+ ","
+							+ current
+							+ ","
+							+ result.getRows()
+							+ ","
+							+ result.getCells()
+							+ ","
+							+ result.getKvLength()
+							+ ","
+							+ result.getRes().size()
+							+ ","
+							+ this.query.regionAndRS
+									.get(Bytes.toString(region)) + ","
+							+ Bytes.toString(region);
+					this.query.writeCSVLog(outStr, 1);
+
+				}
+			}
+
+			BixiCallBack callBack = new BixiCallBack(this);
+
+			/** Step2*** generate scan ***/
+			// build up a quadtree.
+			long s_time = System.currentTimeMillis();
+			this.timePhase.add(s_time);
+			// match rect to find the subspace it belongs to
+
+			// Step1: estimate the window circle for the first time
+			long total_points = this.tableSchema.getTotalNumberOfPoints();
+			double areaOfMBB = this.tableSchema.getEntireSpace().width
+					* this.tableSchema.getEntireSpace().height;
+			double DensityOfMBB = total_points / areaOfMBB;
+			double init_radius = Math.sqrt(n / DensityOfMBB);
+
+			final double x = Math.abs(latitude);
+			final double y = Math.abs(longitude);
+			int count = 0;
+
+			// Step2: trigger a scan to get the points based on the above window
+			int iteration = 1;
+			double radius = (init_radius > this.tableSchema.getSubSpace()) ? init_radius
+					: this.tableSchema.getSubSpace();			
+			this.timePhase.add(System.currentTimeMillis());
+
+			do {
+				
+				String str = "iteration" + iteration + "; count=>" + count
+						+ ";radius=>" + radius;
+				System.out.println(str);
+				// match rect to find the subspace it belongs to
+				XBox[] match_boxes = this.raster.match(latitude, longitude,
+						radius);
+
+				String[] rowRange = new String[2];
+				rowRange[0] = match_boxes[0].getRow();
+				rowRange[1] = match_boxes[1].getRow() + "-*";
+
+				String[] c = raster.getColumns(match_boxes[0], match_boxes[1]);
+				// generate the scan
+				final Scan scan = hbase.generateScan(rowRange, null,
+						new String[] { this.tableSchema.getFamilyName() }, c,
+						this.tableSchema.getMaxVersions());
+				
+				System.out.println("start to send the query to coprocessor.....");
+
+				/** Step3: send request to trigger Coprocessor execution **/
+
+				final XCSVFormat csv = this.csvFormat;
+				final double estimated_radius = radius;
+				hbase.getHTable().coprocessorExec(BixiProtocol.class,
+						scan.getStartRow(), scan.getStopRow(),
+						new Batch.Call<BixiProtocol, RCopResult>() {
+
+							public RCopResult call(BixiProtocol instance)
+									throws IOException {
+								//TODO should change the function name
+								return instance.copQueryNeighbor4Raster(scan,
+										x, y, estimated_radius, csv);
+
+							};
+						}, callBack);
+			
+				radius = radius*(1+ (n*1.0/count));//init_radius * (iteration + 1);
+
+			} while (count < n && (++iteration > 0));			
+
+			long cop_end = System.currentTimeMillis();
+			this.timePhase.add(cop_end);		
+			
+			long exe_time = cop_end - s_time;
+
+			//ArrayList<Double> tempArray = new ArrayList<Double>(
+			java.lang.Double[] tempArray = (java.lang.Double[])callBack.res.getDistances().values().toArray();			
+			Collections.sort(Arrays.asList(tempArray));
+			
+			// write to csv file
+			String outStr = "";
+			outStr += "within," + "cop," + callBack.res.getRes().size() + ","
+					+ callBack.res.getCells() + "," + callBack.res.getRows()
+					+ "," + exe_time + "," + "-1" + ","
+					+ this.tableSchema.getSubSpace() + "," + radius;
+
+			for (int i = 0; i < this.timePhase.size(); i++) {
+				outStr += ",";
+				outStr += this.timePhase.get(i);
+			}
+			outStr += "," + tempArray[0] + "," + tempArray[tempArray.length-1];
+			this.writeCSVLog(outStr, 0);	
+			
+			
+			return callBack.res.getDistances();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		} catch (Throwable ee) {
+			ee.printStackTrace();
+		} finally {
+			hbase.closeTableHandler();
+			this.closeCSVLog();
+		}
+
+		return null;				
+		
+		
+		
+		
 	}
 
 	@Override

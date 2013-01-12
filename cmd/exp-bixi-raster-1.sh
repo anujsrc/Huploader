@@ -34,7 +34,7 @@ for j in {1..1}; do
 echo "********$j Times*********************************************************\n"
 
 for i in $short; do
-echo "******scan****$i****************"
+echo "*********scan for *$i****************"
 ${myDir}/query-from-hbase.sh ../schema/bixi.raster.1.schema ../csv/bixi.conf ../conf/ 0 0 $i
 done
 
