@@ -54,7 +54,7 @@ public class XHybridIndex {
     	String[] indexes = new String[2];
     	indexes[0] = tile_index+"-"+box.getRow();
     	indexes[1] = box.getColumn();   
-    	System.out.println("row=> "+indexes[0]+";column=>"+indexes[1]);
+    	//System.out.println("row=> "+indexes[0]+";column=>"+indexes[1]);
     	return indexes;    	
     }
 

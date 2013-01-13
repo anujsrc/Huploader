@@ -65,7 +65,7 @@ public class CSVDataUploader {
 		String schema_desc_file = args[1];
 		String hbaseConf = args[2];
 		String input_dir = args[3];
-		int batchNum = 100;
+		int batchNum = 1000;
 		if(args.length == 5)
 			batchNum = Integer.valueOf(args[4]);
 		
