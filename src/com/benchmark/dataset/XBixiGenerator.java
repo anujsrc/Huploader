@@ -22,10 +22,10 @@ public class XBixiGenerator {
 		String distributionFile = null;
 		if(distributionType.equals("zipf")){
 			XZipfDistribution zipf = new XZipfDistribution();
-			distributionFile = zipf.generate(this.number,this.min,this.max);
+			distributionFile = zipf.generate(this.number,this.min,this.max,outputFile);
 		}else if(distributionType.equals("uniform")){
 			XUniformDistribution uniform = new XUniformDistribution();
-			distributionFile = uniform.generate(this.number,this.min,this.max);
+			distributionFile = uniform.generate(this.number,this.min,this.max,outputFile);
 		}
 		if(distributionFile == null)
 			throw new Exception("the distribution file is null! ");

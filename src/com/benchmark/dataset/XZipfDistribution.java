@@ -23,7 +23,11 @@ public class XZipfDistribution {
 
 	String fileNamePrefix = "zipf";
 	
-	public String generate(int number,int min, int max){	
+	public String generate(int number,int min, int max,String outputFolder){
+		
+		if(outputFolder != null){
+			fileNamePrefix = outputFolder+"/"+fileNamePrefix;
+		}
 		
 		RandomDataImpl randomData1 = new RandomDataImpl(); 
 		double x[] = new double[number*2];
@@ -98,6 +102,6 @@ public class XZipfDistribution {
 	
 	public static void main(String []args){
 		XZipfDistribution distribution = new XZipfDistribution();
-		distribution.generate(10000000,0,100);
+		distribution.generate(10000000,0,100,"");
 	}
 }

@@ -26,8 +26,11 @@ public class XUniformDistribution {
 
 	String fileNamePrefix = "uniform";
 	
-	public String generate(int number,int min, int max){	
+	public String generate(int number,int min, int max,String outputFolder){	
 		
+		if(outputFolder != null){
+			fileNamePrefix = outputFolder+"/"+fileNamePrefix;
+		}
 		
 		double x[] = new double[number];
 		double y[] = new double[number];
@@ -67,7 +70,7 @@ public class XUniformDistribution {
 	
 	public static void main(String []args){
 		XUniformDistribution distribution = new XUniformDistribution();
-		distribution.generate(10000000,0,100);
+		distribution.generate(10000000,0,100,"");
 	}	
 	
 	
