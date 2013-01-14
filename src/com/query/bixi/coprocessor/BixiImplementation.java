@@ -311,7 +311,7 @@ public class BixiImplementation extends BaseEndpointCoprocessor implements BixiP
 						//System.out.println(Bytes.toString(kv.getRow())+"=>"+Bytes.toString(kv.getValue()));
 						cell++;	
 						
-						kvLength = (kvLength*7 < kv.getLength()*7)? kv.getLength()*7:kvLength*7;
+						kvLength = (kvLength*3 < kv.getLength()*3)? kv.getLength()*3:kvLength*3;
 						
 						// get the distance between this point and the given point	
 						if(kv.getTimestamp() == 1){
@@ -322,20 +322,19 @@ public class BixiImplementation extends BaseEndpointCoprocessor implements BixiP
 							lon = java.lang.Double.valueOf(Bytes.toString(kv.getValue()));
 						}
 						
-						// one column 
-						if(cell % 7 == 0){ // 7 means the number of versions
+						// because of the timestamp filter, this is fixed
+						if(cell % 3 == 0){
 							Point2D.Double resPoint = new Point2D.Double(lat,lon);									
 							double distance = resPoint.distance(point);
 
 							if (distance <= radius) {										
 								results.getRes().add(id);
-							}
-							
+							}	
 							id = null;
 							lat = -1;
-							lon = -1;
-						}											
-
+							lon = -1;							
+						}							
+											
 					}
 				}								
 				keyvalues.clear();				
