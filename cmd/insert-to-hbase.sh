@@ -51,5 +51,6 @@ ${HADOOP_HOME}/lib/jackson-mapper-asl-1.8.8.jar
 MYLIB=${PWD}/../bin/huploader.jar
 MYCONF=${PWD}/../conf/
 
-${JAVA_HOME}/bin/java -Xmx1500m -classpath ${COMMONLIB}:${HADOOPLIB}:${HADOOPCONF}:${HBASELIB}:${HBASECONF}:${MAPRLIB}:${MYLIB}:${MYCONF}   com.hbase.insert.csv.CSVDataUploader $*
+# for quad tree, there also should be large space
+${JAVA_HOME}/bin/java -Xms1500m -Xmx3000m -classpath ${COMMONLIB}:${HADOOPLIB}:${HADOOPCONF}:${HBASELIB}:${HBASECONF}:${MAPRLIB}:${MYLIB}:${MYCONF}   com.hbase.insert.csv.CSVDataUploader $*
 

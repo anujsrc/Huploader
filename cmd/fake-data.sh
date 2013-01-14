@@ -23,6 +23,6 @@ ${PWD}/../lib/commons-math3-3.0.jar
 MYCONF=${PWD}/../conf/
 
 # jar file which is used to preprocess the files
-
-${JAVA_HOME}/bin/java -Xmx1500m -classpath ${MYLIB}:${MYCONF} com.benchmark.dataset.XBixiGenerator $* 
+# java heap space should be large, because it will generate large data
+${JAVA_HOME}/bin/java -Xms2000m -Xmx4000m -classpath ${MYLIB}:${MYCONF} com.benchmark.dataset.XBixiGenerator $* 
 
