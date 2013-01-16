@@ -28,7 +28,7 @@ d8
 d9
 "
 
-export short, long
+export short  long
 
 for j in {1..1}; do
 echo "********$j Times*********************************************************\n"

@@ -36,7 +36,8 @@ ${HBASE_HOME}/lib/slf4j-api-1.4.3.jar:\
 ${HBASE_HOME}/lib/slf4j-log4j12-1.4.3.jar:\
 ${HBASE_HOME}/lib/protobuf-java-2.4.0a.jar:\
 ${HBASE_HOME}/lib/commons-cli-1.2.jar:\
-${PWD}/../lib/json-simple-1.1.1.jar
+${PWD}/../lib/json-simple-1.1.1.jar:\
+${PWD}/../lib/google-collections-0.8.jar
 
 HBASELIB=${HBASE_HOME}/hbase-0.94.1-security.jar
 HBASECONF=${HBASE_HOME}/conf

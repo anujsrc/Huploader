@@ -22,7 +22,7 @@
 		"tile":"25",
 		"subspace":"1"
 	},
-	"num_of_points":10000,
+	"num_of_points":10000000,
 	"log_file_name":"bixi-hybrid-1"
 
 }
