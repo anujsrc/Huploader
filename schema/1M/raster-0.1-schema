@@ -1,0 +1,26 @@
+{   "name": "raster-0.1",
+	"families":[
+	{
+	  "name":"f",
+	  "compression":"GZ",
+	  "versions":"1000",
+	  "min_versions":"1",
+	  "blocksize":"",
+	  "in_memory":"",
+	  "blockcache":"true",
+	  "bloomfilter":"ROWCOL",
+	  "replication_scope":""
+	}
+	],
+	"max_file_size":"",
+	"mem_store_size":"",
+	
+	"schema":{
+		"space":"0,0,100,100",
+		"indexing":"1",
+		"encoding":"0",
+		"subspace":"0.1"
+	},
+	"num_of_points":1000000,
+	"log_file_name":"raster-0.1"
+}
