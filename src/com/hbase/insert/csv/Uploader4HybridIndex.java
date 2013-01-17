@@ -44,6 +44,11 @@ public class Uploader4HybridIndex extends CSVDataUploader{
 				continue;
 			long fstart = System.currentTimeMillis();
 			int totalRow = 0;
+			int flushCount = 0;
+			long totalFlush = 0;
+			long beginFlush = -1;
+			long indicateTime = 0;
+			long totalIndicator = 0;
 			try {
 
 				in = new BufferedReader(new FileReader(input_dir + "/"
@@ -59,10 +64,18 @@ public class Uploader4HybridIndex extends CSVDataUploader{
 						continue;
 					}
 					String[] values = line.split(",");
+					// for the debug time
+					if(putList.size() == 0){
+						beginFlush = System.currentTimeMillis();
+						indicateTime = 0;
+					}
+					
 					// generate cell indicator and cell value	
 					//System.out.println(lan_index+";"+long_index+";"+id_index);
+					long s = System.currentTimeMillis();
 					String[] cell_indicator = this.getCellIndicator(values[lan_index],values[long_index],values[id_index]);									
-					
+					indicateTime+=(System.currentTimeMillis()-s);
+										
 					// insert it into hbase
 					Put put = new Put(cell_indicator[0].getBytes());
 					// add all attribute of one object into multiple cells corresponding to versions
@@ -74,9 +87,17 @@ public class Uploader4HybridIndex extends CSVDataUploader{
 					num_of_row++;
 
 					if (putList.size() == batchNum) {
-						hbase.flushBufferedRow(putList);
+						long flushTime = hbase.flushBufferedRow(putList);
+						totalFlush += flushTime;
 						totalRow += batchNum;
-						System.out.println("inserted row=> "+totalRow);
+						totalIndicator+=indicateTime;
+						System.out.println("flushNo=>"+(flushCount++)+";insertedRow=>"+
+								totalRow+";flushTime=>"+flushTime+
+								";lastFlush=>"+(System.currentTimeMillis() - beginFlush)+
+								";IndicatorTime=>"+indicateTime+
+								";totalTime(s)=>"+(System.currentTimeMillis() - fstart)/1000+
+								";totalFlush=>"+totalFlush+
+								";TotalIndicator=>"+totalIndicator);
 						putList.clear();
 					}
 					line = in.readLine();
@@ -92,8 +113,8 @@ public class Uploader4HybridIndex extends CSVDataUploader{
 				file_num++;
 				in.close();
 				System.out.println("file_name=>" + fileName + ";file_num=>"
-						+ file_num + ";exe_time=>"
-						+ (System.currentTimeMillis() - fstart)
+						+ file_num + ";exe_time(s)=>"
+						+ (System.currentTimeMillis() - fstart)/1000
 						+ ";file_total_number=>" + totalRow);
 
 			} catch (Exception e) {
@@ -109,9 +130,9 @@ public class Uploader4HybridIndex extends CSVDataUploader{
 		} // end of files list
 		
 		this.hbase.closeTableHandler();
-		System.out.println("file_num=>"+file_num+";exe_time=>"
-				+ (System.currentTimeMillis() - start) + ";total_number=>"
-				+ num_of_row);				
+		System.out.println("file_num=>"+file_num+";exe_time(s)=>"
+				+ (System.currentTimeMillis() - start)/(1000) + ";total_number=>"
+				+ num_of_row);			
 	}
 
 

@@ -22,6 +22,7 @@ import org.apache.commons.math3.random.RandomGenerator;
 public class XZipfDistribution {
 
 	String fileNamePrefix = "zipf";
+	String fileNameSuffix = ".dat";
 	
 	public String generate(int number,int min, int max,String outputFolder){
 		
@@ -76,7 +77,7 @@ public class XZipfDistribution {
 		FileWriter xstatFile = null;
 		FileWriter ystatFile = null;
 		try{
-			fw = new FileWriter(fileNamePrefix+".csv");
+			fw = new FileWriter(fileNamePrefix+fileNameSuffix);
 			xstatFile = new FileWriter(fileNamePrefix+"-x.spc");
 			ystatFile = new FileWriter(fileNamePrefix+"-y.spc");
 			xstatFile.write("m\tVm\n");
@@ -97,7 +98,7 @@ public class XZipfDistribution {
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-		return fileNamePrefix+".csv";
+		return fileNamePrefix+fileNameSuffix;
 	}
 	
 	public static void main(String []args){

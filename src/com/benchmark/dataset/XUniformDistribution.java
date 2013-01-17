@@ -25,6 +25,7 @@ import org.w3c.dom.Element;
 public class XUniformDistribution {
 
 	String fileNamePrefix = "uniform";
+	String fileNameSuffix = ".dat";
 	
 	public String generate(int number,int min, int max,String outputFolder){	
 		
@@ -53,7 +54,7 @@ public class XUniformDistribution {
 		System.out.println("===normalized==and start to write=");
 		FileWriter fw = null;
 		try{
-			fw = new FileWriter(fileNamePrefix+".csv");
+			fw = new FileWriter(fileNamePrefix+fileNameSuffix);
 			for(int i=0;i<total;i++){
 				x[i] = x[i] / (number/max);
 				y[i] = y[i] / (number/max); 
@@ -65,7 +66,7 @@ public class XUniformDistribution {
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-		return fileNamePrefix+".csv";
+		return fileNamePrefix+fileNameSuffix;
 	}	
 	
 	public static void main(String []args){

@@ -212,15 +212,18 @@ public class CSVDataUploader {
 			if (!fileName.endsWith(".csv"))
 				continue;
 			long fstart = System.currentTimeMillis();
+			long beginFlush = -1;
 			int totalRow = 0;
+			int flushCount = 0;
+			long totalFlush = 0;
+			long indicateTime = 0;
+			long totalIndicator = 0;
 			try {
 
 				in = new BufferedReader(new FileReader(input_dir + "/"
 						+ fileName));
-
-
 				// read the file
-				String line = in.readLine().trim();
+				String line = in.readLine();
 				
 				while (line != null) {
 					line = line.trim();
@@ -228,16 +231,25 @@ public class CSVDataUploader {
 						continue;
 					}
 					String[] values = line.split(",");
-					// generate cell indicator and cell value	
-					//System.out.println(lan_index+";"+long_index+";"+id_index);
+					// for the debug time
+					if(putList.size() == 0){
+						beginFlush = System.currentTimeMillis();
+						indicateTime = 0;
+					}
+					
+					// generate cell indicator and cell value
+					long s = System.currentTimeMillis();
 					String[] cell_indicator = this.getCellIndicator(values[lan_index],values[long_index],values[id_index]);
+					indicateTime+=(System.currentTimeMillis()-s);
 					// for quad Tree indexing, there is no need to store id in a cell because id is the qualifer
 					ArrayList<String> columnsFilter = null;
 					if(this.quadTree != null){
 						columnsFilter = new ArrayList<String>();
 						columnsFilter.add("id");
 					}
-					String cell_value = this.getCellValue(values,columnsFilter);
+					
+					String cell_value = this.getCellValue(values,columnsFilter);					
+
 					// insert it into hbase
 					Put put = new Put(cell_indicator[0].getBytes());
 					put.add(family.getBytes(), cell_indicator[1].getBytes(), Long.valueOf(cell_indicator[2]), 
@@ -245,11 +257,18 @@ public class CSVDataUploader {
 										
 					putList.add(put);
 					num_of_row++;
-
-					if (putList.size() == batchNum) {
-						hbase.flushBufferedRow(putList);
+					if (putList.size() == batchNum) {						
+						long flushTime = hbase.flushBufferedRow(putList);
+						totalFlush += flushTime;
 						totalRow += batchNum;
-						System.out.println("inserted row=> "+totalRow);
+						totalIndicator+=indicateTime;
+						System.out.println("flushNo=>"+(flushCount++)+";insertedRow=>"+
+								totalRow+";flushTime=>"+flushTime+
+								";lastFlush=>"+(System.currentTimeMillis() - beginFlush)+
+								";IndicatorTime=>"+indicateTime+
+								";totalTime(s)=>"+(System.currentTimeMillis() - fstart)/1000+
+								";totalFlush=>"+totalFlush+
+								";TotalIndicator=>"+totalIndicator);
 						putList.clear();
 					}
 					line = in.readLine();
@@ -265,8 +284,8 @@ public class CSVDataUploader {
 				file_num++;
 				in.close();
 				System.out.println("file_name=>" + fileName + ";file_num=>"
-						+ file_num + ";exe_time=>"
-						+ (System.currentTimeMillis() - fstart)
+						+ file_num + ";exe_time(s)=>"
+						+ (System.currentTimeMillis() - fstart)/(1000)
 						+ ";file_total_number=>" + totalRow);
 
 			} catch (Exception e) {
@@ -282,8 +301,8 @@ public class CSVDataUploader {
 		} // end of files list
 		
 		this.hbase.closeTableHandler();
-		System.out.println("file_num=>"+file_num+";exe_time=>"
-				+ (System.currentTimeMillis() - start) + ";total_number=>"
+		System.out.println("file_num=>"+file_num+";exe_time(s)=>"
+				+ (System.currentTimeMillis() - start)/(1000) + ";total_number=>"
 				+ num_of_row);		
 
 	}
@@ -304,7 +323,7 @@ public class CSVDataUploader {
 			indicator[2] = "1";
 		}
 		if(this.raster != null){
-			XBox box = raster.addPoint(Double.valueOf(lan).doubleValue(),Double.valueOf(longitude).doubleValue());
+			XBox box = raster.locate(Double.valueOf(lan).doubleValue(),Double.valueOf(longitude).doubleValue());
 			indicator[0] = box.getRow();
 			indicator[1] = box.getColumn();
 			indicator[2] = String.valueOf(box.getObjectCount());

@@ -242,19 +242,23 @@ public class HBaseUtil {
 		return put;
 		
 	}	
-	
-	public void flushBufferedRow(ArrayList<Put> putList)throws Exception{
+	/**
+	 * Only for debug return the execution time
+	 * @param putList
+	 * @return
+	 * @throws Exception
+	 */
+	public long flushBufferedRow(ArrayList<Put> putList)throws Exception{
 		long start = System.currentTimeMillis();
 		try{			
 			table.setAutoFlush(false);
 			//table.setWriteBufferSize(1024*1024*12);
 			table.put(putList);	
 			table.setAutoFlush(true);			
-			System.out.println("flushrow=> "+putList.size()+";exe time=>"+(System.currentTimeMillis()-start));	
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-				
+		return (System.currentTimeMillis()-start);		
 	}
 		
 	public void closeTableHandler(){

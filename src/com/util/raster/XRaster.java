@@ -25,11 +25,16 @@ public class XRaster {
     
     private Rectangle2D.Double m_rect = null;            // The area this QuadTree represents
     private ArrayList<XBox> m_boxes = null;
+    private XBox[][] m_matrix = null;
     private DecimalFormat IndexKeyFormatter = null;
     private DecimalFormat IndexColumnFormatter = null;
     private Point2D.Double offset = null;
     
     public XRaster(Rectangle2D.Double rect, double min_size_of_height,Point2D.Double offsetPoint){
+    	
+    	this.min_size_of_height = min_size_of_height;
+    	this.min_size_of_width = min_size_of_height;
+    	
     	if(offsetPoint != null){
     		this.offset = new Point2D.Double(offsetPoint.x,offsetPoint.y);  
     		if(rect.x < 0 || rect.y < 0){
@@ -42,11 +47,12 @@ public class XRaster {
         	this.m_rect = new Rectangle2D.Double(rect.x,rect.y,rect.width,rect.height);    	
     	}
     	
-    	this.min_size_of_height = min_size_of_height;
-    	this.min_size_of_width = min_size_of_height;    	
-    	this.m_boxes = new ArrayList<XBox>();
+    	int num_of_row = (int) (this.m_rect.getHeight() / this.min_size_of_height);
     	
-    	int num_of_row = (int) (this.m_rect.getHeight() / this.min_size_of_height); 	
+    	
+    	this.m_boxes = new ArrayList<XBox>();
+    	// back up of m_boxes     	
+    	this.m_matrix = new XBox[num_of_row+1][num_of_row+1];
     	
     	IndexKeyFormatter = this.getKeyFormatter(num_of_row);   
     	IndexColumnFormatter = this.getKeyFormatter((int)(m_rect.getWidth() / min_size_of_width));
@@ -102,13 +108,18 @@ public class XRaster {
     		
     	String f_row = this.IndexKeyFormatter.format(row);
     	String f_column = this.IndexColumnFormatter.format(column);
-    	for(XBox box:m_boxes){
+/*    	for(XBox box:m_boxes){
     		if(box.getRow().equals(f_row) && box.getColumn().equals(f_column)){    			
     			return box;
     		}
-    	} 
+    	} */
+    	    	
+    	XBox box = new XBox(f_row,f_column);
+    	if(this.m_matrix[row][column] == null)
+    		this.m_matrix[row][column] = box;
+    	else
+    		this.m_matrix[row][column].addObject();
     	
-    	XBox box = new XBox(this.IndexKeyFormatter.format(row),this.IndexColumnFormatter.format(column));
     	return box;    	
     }
     /**
@@ -119,8 +130,8 @@ public class XRaster {
      */
     public XBox addPoint(double x, double y){
     	XBox box = this.locate(x, y);
-    	box.addObject();
-    	this.m_boxes.add(box);
+    	//box.addObject();
+    	//this.m_boxes.add(box);
     	return box;
     }
     
@@ -194,16 +205,15 @@ public class XRaster {
 			xIndexFormatter = new DecimalFormat("000000");
 		}else if(num_of_key<10000000){
 			xIndexFormatter = new DecimalFormat("0000000");
-		}else{
+		}else if(num_of_key<100000000){
 			xIndexFormatter = new DecimalFormat("00000000");
+		}else{
+			xIndexFormatter = new DecimalFormat("000000000");
 		}
 		return xIndexFormatter;
 	}  
     
-	public void addBox(XBox box){
-		this.m_boxes.add(box);
-	}
-	
+
 	public void print(){
 		String msg = "";
 		int num_of_row = (int) (this.m_rect.getHeight() / this.min_size_of_height); 
