@@ -80,7 +80,7 @@ public class XRaster {
      */  
     public XBox locate(double x, double y) {
     	double[] normalized = this.normalize(x, y);  
-    	System.out.println("normalized: "+normalized[0]+";"+normalized[1]);
+    	//System.out.println("normalized: "+normalized[0]+";"+normalized[1]);
     	XBox box = this.intervalLocate(normalized[0], normalized[1]);
     	return box;
     }

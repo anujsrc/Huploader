@@ -65,7 +65,7 @@ public class CSVDataUploader {
 		String schema_desc_file = args[1];
 		String hbaseConf = args[2];
 		String input_dir = args[3];
-		int batchNum = 100;
+		int batchNum = 1000;
 		if(args.length == 5)
 			batchNum = Integer.valueOf(args[4]);
 		
@@ -249,6 +249,7 @@ public class CSVDataUploader {
 					if (putList.size() == batchNum) {
 						hbase.flushBufferedRow(putList);
 						totalRow += batchNum;
+						System.out.println("inserted row=> "+totalRow);
 						putList.clear();
 					}
 					line = in.readLine();
@@ -258,6 +259,7 @@ public class CSVDataUploader {
 				if (putList.size() > 0) {
 					hbase.flushBufferedRow(putList);
 					totalRow += putList.size();
+					System.out.println("inserted row=> "+totalRow);
 					putList.clear();
 				}
 				file_num++;

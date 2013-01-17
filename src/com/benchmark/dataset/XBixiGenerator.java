@@ -16,22 +16,23 @@ public class XBixiGenerator {
 		this.max = max;
 	}
 		
-	public void generateData(String distributionType, String outputFile) throws Exception{
+	public void generateData(String distributionType, String outputFolder, String filename) throws Exception{
 		
 		System.out.println("start to generate data...");
 		String distributionFile = null;
 		if(distributionType.equals("zipf")){
 			XZipfDistribution zipf = new XZipfDistribution();
-			distributionFile = zipf.generate(this.number,this.min,this.max);
+			distributionFile = zipf.generate(this.number,this.min,this.max,outputFolder);
 		}else if(distributionType.equals("uniform")){
 			XUniformDistribution uniform = new XUniformDistribution();
-			distributionFile = uniform.generate(this.number,this.min,this.max);
+			distributionFile = uniform.generate(this.number,this.min,this.max,outputFolder);
 		}
 		if(distributionFile == null)
 			throw new Exception("the distribution file is null! ");
 		else
 			System.out.println(distributionFile);
 		try{
+			String outputFile = outputFolder+"/"+filename;
 			FileWriter fw = new FileWriter(outputFile);
 			FileReader fr = new FileReader(distributionFile);
 			BufferedReader br = new BufferedReader(fr);	
@@ -98,7 +99,7 @@ public class XBixiGenerator {
 		
 		XBixiGenerator bixi = new XBixiGenerator(number,min,max);
 		try{
-			bixi.generateData(distributionType, outputFolder+"/"+distributionType+"-bixi.csv");	
+			bixi.generateData(distributionType, outputFolder, distributionType+"-bixi.csv");	
 		}catch(Exception e){
 			e.printStackTrace();
 		}

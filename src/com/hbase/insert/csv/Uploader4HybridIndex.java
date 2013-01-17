@@ -76,6 +76,7 @@ public class Uploader4HybridIndex extends CSVDataUploader{
 					if (putList.size() == batchNum) {
 						hbase.flushBufferedRow(putList);
 						totalRow += batchNum;
+						System.out.println("inserted row=> "+totalRow);
 						putList.clear();
 					}
 					line = in.readLine();
@@ -85,6 +86,7 @@ public class Uploader4HybridIndex extends CSVDataUploader{
 				if (putList.size() > 0) {
 					hbase.flushBufferedRow(putList);
 					totalRow += putList.size();
+					System.out.println(totalRow+" has already been inserted");
 					putList.clear();
 				}
 				file_num++;
