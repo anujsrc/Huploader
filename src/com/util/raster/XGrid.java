@@ -6,6 +6,8 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.util.XCommon;
+
 public abstract class XGrid {
 
 	
@@ -41,8 +43,8 @@ public abstract class XGrid {
     	
     	this.num_of_row = (int) (this.m_rect.getHeight() / this.min_size_of_height);
     	    	
-    	IndexKeyFormatter = this.getKeyFormatter(num_of_row);   
-    	IndexColumnFormatter = this.getKeyFormatter((int)(m_rect.getWidth() / min_size_of_width));
+    	IndexKeyFormatter = XCommon.getKeyFormatter(num_of_row);   
+    	IndexColumnFormatter = XCommon.getKeyFormatter((int)(m_rect.getWidth() / min_size_of_width));
     }
     
     /**
@@ -82,29 +84,7 @@ public abstract class XGrid {
     }    
 
     
-	private DecimalFormat getKeyFormatter(int num_of_key){
-		DecimalFormat xIndexFormatter = null;
-		if(num_of_key<10){
-			xIndexFormatter = new DecimalFormat("0");
-		}else if(num_of_key<100){
-			xIndexFormatter = new DecimalFormat("00");
-		}else if(num_of_key<1000){
-			xIndexFormatter = new DecimalFormat("000");
-		}else if(num_of_key<10000){
-			xIndexFormatter = new DecimalFormat("0000");
-		}else if(num_of_key<100000){
-			xIndexFormatter = new DecimalFormat("00000");
-		}else if(num_of_key<1000000){
-			xIndexFormatter = new DecimalFormat("000000");
-		}else if(num_of_key<10000000){
-			xIndexFormatter = new DecimalFormat("0000000");
-		}else if(num_of_key<100000000){
-			xIndexFormatter = new DecimalFormat("00000000");
-		}else{
-			xIndexFormatter = new DecimalFormat("000000000");
-		}
-		return xIndexFormatter;
-	}  
+ 
     
 
 	public void print(){

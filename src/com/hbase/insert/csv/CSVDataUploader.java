@@ -92,93 +92,7 @@ public class CSVDataUploader {
 		
 	}	
 	
-	
-	private void getConfiguration(String input_desc_file,
-			String schema_desc_file) {
-		this.tableSchema = new XTableSchema(schema_desc_file);
-		this.csvFormat = new XCSVFormat(input_desc_file);
-		this.setIndexing();
-	}
 
-	private void setHBase(String hbaseConfPath) throws IOException {
-		hbase = new HBaseUtil(hbaseConfPath);
-		HTable tableHandler = hbase.getTableHandler(this.tableSchema.getTableName());
-		
-		String bufferSize = hbase.getHBaseConfig().get("hbase.client.write.buffer");		 
-		if(bufferSize != null){
-			tableHandler.setWriteBufferSize(Long.valueOf(bufferSize));
-		}else{
-			System.out.println("Default buffer size: "+tableHandler.getWriteBufferSize());
-		}		
-	}	
-
-	/**
-	 * prepare the indexing
-	 * 
-	 * @param indexing
-	 * @param encoding
-	 */
-	private void setIndexing() {
-
-		Rectangle2D.Double space = this.tableSchema.getEntireSpace();
-		double min_size_of_subspace = this.tableSchema.getSubSpace();
-		Point2D.Double offset = this.tableSchema.getOffset();
-		int indexing = this.tableSchema.getIndexing();
-		int encoding = this.tableSchema.getEncoding();
-		
-		if (indexing == XConstants.INDEX_QUAD_TREE) {
-			if (encoding == XConstants.ENCODING_BINARY) {
-
-				this.quadTree = new XQuadTree(space, min_size_of_subspace,offset);
-				this.quadTree.buildTree(XConstants.ENCODING_BINARY);
-
-			} else if (encoding == XConstants.ENCODING_DECIMAL) {
-				this.quadTree = new XQuadTree(space, min_size_of_subspace,offset);
-				this.quadTree.buildTree(XConstants.ENCODING_DECIMAL);
-			}
-		} else if (indexing == XConstants.INDEX_RASTER) {
-			this.raster = new X3DGrid(space, min_size_of_subspace,offset);	
-			
-		} else if (indexing == XConstants.INDEX_HYBRID){			
-			System.out.print("initialize hybrid");
-			this.hybrid = new XHybridIndex(space,this.tableSchema.getTileSize(),offset,min_size_of_subspace);
-			this.hybrid.buildZone(encoding);
-			
-		}else{
-			System.out.println("Indexing parameter is error!");
-		}
-	}
-
-
-	/**
-	 * These three variable are to locate the index of langitude, 
-	 * longitude, and id which are used to calcuate the rowkey,column id, and version
-	 */
-	protected int lan_index = -1;
-	protected int long_index = -1;
-	protected int id_index = -1; 
-	
-	protected void locateKeyIndicator(){
-		System.out.println("start to locate the key indicator");
-		String[] columns = this.csvFormat.getColumns();
-		for(int i=0;i<columns.length;i++){
-			if(columns[i].equals("lat")){
-				lan_index = i;					
-			}
-			if(columns[i].equals("long")){
-				long_index = i;				
-			}
-			if(columns[i].equals("id")){
-				id_index = i;				
-			}
-			if(lan_index > 0 && long_index > 0 && id_index > 0){
-				break;
-			}
-		}
-		
-		System.out.println("id=>"+id_index+";lan=>"+lan_index+";long=>"+long_index);
-	}
-	
 	/**
 	 * workflow of this function: 1 read the csv data, and put into hbase, then close hbase
 	 * @param input_dir
@@ -305,7 +219,96 @@ public class CSVDataUploader {
 				+ (System.currentTimeMillis() - start)/(1000) + ";total_number=>"
 				+ num_of_row);		
 
+	}	
+	
+	
+	private void getConfiguration(String input_desc_file,
+			String schema_desc_file) {
+		this.tableSchema = new XTableSchema(schema_desc_file);
+		this.csvFormat = new XCSVFormat(input_desc_file);
+		this.setIndexing();
 	}
+
+	private void setHBase(String hbaseConfPath) throws IOException {
+		hbase = new HBaseUtil(hbaseConfPath);
+		HTable tableHandler = hbase.getTableHandler(this.tableSchema.getTableName());
+		
+		String bufferSize = hbase.getHBaseConfig().get("hbase.client.write.buffer");		 
+		if(bufferSize != null){
+			tableHandler.setWriteBufferSize(Long.valueOf(bufferSize));
+		}else{
+			System.out.println("Default buffer size: "+tableHandler.getWriteBufferSize());
+		}		
+	}	
+
+	/**
+	 * prepare the indexing
+	 * 
+	 * @param indexing
+	 * @param encoding
+	 */
+	private void setIndexing() {
+
+		Rectangle2D.Double space = this.tableSchema.getEntireSpace();
+		double min_size_of_subspace = this.tableSchema.getSubSpace();
+		Point2D.Double offset = this.tableSchema.getOffset();
+		int indexing = this.tableSchema.getIndexing();
+		int encoding = this.tableSchema.getEncoding();
+		
+		if (indexing == XConstants.INDEX_QUAD_TREE) {
+			if (encoding == XConstants.ENCODING_BINARY) {
+
+				this.quadTree = new XQuadTree(space, min_size_of_subspace,offset);
+				this.quadTree.buildTree(XConstants.ENCODING_BINARY);
+
+			} else if (encoding == XConstants.ENCODING_DECIMAL) {
+				this.quadTree = new XQuadTree(space, min_size_of_subspace,offset);
+				this.quadTree.buildTree(XConstants.ENCODING_DECIMAL);
+			}
+		} else if (indexing == XConstants.INDEX_RASTER) {
+			this.raster = new X3DGrid(space, min_size_of_subspace,offset);	
+			
+		} else if (indexing == XConstants.INDEX_HYBRID){			
+			System.out.print("initialize hybrid");
+			this.hybrid = new XHybridIndex(space,this.tableSchema.getTileSize(),offset,min_size_of_subspace);
+			this.hybrid.buildZone(encoding);
+			
+		}else{
+			System.out.println("Indexing parameter is error!");
+		}
+	}
+
+
+	/**
+	 * These three variable are to locate the index of langitude, 
+	 * longitude, and id which are used to calcuate the rowkey,column id, and version
+	 */
+	protected int lan_index = -1;
+	protected int long_index = -1;
+	protected int id_index = -1; 
+	
+	protected void locateKeyIndicator(){
+		System.out.println("start to locate the key indicator");
+		String[] columns = this.csvFormat.getColumns();
+		for(int i=0;i<columns.length;i++){
+			if(columns[i].equals("lat")){
+				lan_index = i;					
+			}
+			if(columns[i].equals("long")){
+				long_index = i;				
+			}
+			if(columns[i].equals("id")){
+				id_index = i;				
+			}
+			if(lan_index > 0 && long_index > 0 && id_index > 0){
+				break;
+			}
+		}
+		
+		System.out.println("id=>"+id_index+";lan=>"+lan_index+";long=>"+long_index);
+	}
+	
+
 	/**
 	 * Get cell indicator for the data point, based indexing, encdding
 	 *  

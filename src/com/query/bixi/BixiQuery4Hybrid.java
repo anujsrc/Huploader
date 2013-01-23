@@ -25,6 +25,7 @@ import com.query.QueryAbstraction;
 import com.query.bixi.coprocessor.BixiProtocol;
 import com.query.bixi.coprocessor.RCopResult;
 import com.util.XCSVFormat;
+import com.util.XCommon;
 import com.util.XTableSchema;
 import com.util.raster.XBox;
 
@@ -166,7 +167,7 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 			}
 
 			final Scan scan = hbase.generateScan(rowRange, fList,
-					new String[] { this.tableSchema.getFamilyName() }, null,
+					new String[] { this.tableSchema.getFamilyName() }, null,					
 					this.tableSchema.getMaxVersions());
 
 			System.out.println("start to send the query to coprocessor.....");
@@ -287,7 +288,6 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 			// build up a quadtree.
 			long s_time = System.currentTimeMillis();
 			this.timePhase.add(s_time);
-			// match rect to find the subspace it belongs to
 
 			// match rect to find the subspace it belongs to
 			long match_s = System.currentTimeMillis();
@@ -297,14 +297,13 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 					y, radius);
 			long match_time = System.currentTimeMillis() - match_s;
 
-			
-			FilterList fList = new FilterList(FilterList.Operator.MUST_PASS_ONE);
+
 			List<Long> timestamps = new ArrayList<Long>();
 			timestamps.add(Long.valueOf(1));
 			timestamps.add(Long.valueOf(2));
 			timestamps.add(Long.valueOf(3));
 			Filter timestampFilter = hbase.getTimeStampFilter(timestamps);
-			fList.addFilter(timestampFilter);
+			
 			
 			/** Step3: send request to trigger Coprocessor execution **/
 			System.out.println("start to send the query to coprocessor.....");
@@ -312,11 +311,25 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 			this.timePhase.add(cop_start);
 			String rows = "";
 			for(String tileID: result.keySet()){				
+				
+				String top = tileID+"-"+ result.get(tileID)[0].getRow();
+				String down = tileID+"-"+ result.get(tileID)[1].getRow();
+				Filter rowTopFilter = hbase.getBinaryFilter(">=", top);
+				Filter rowDownFilter = hbase.getBinaryFilter("<=", down);
+				
+				FilterList fList = new FilterList(FilterList.Operator.MUST_PASS_ALL);				
+				Filter columnFilter =hbase.getColumnRangeFilter((result.get(tileID)[0].getColumn()+"-").getBytes(),true,
+				//(result.get(tileID)[1].getColumn()+1+"-").getBytes(),true);
+				(XCommon.IncFormatString(result.get(tileID)[1].getColumn())+"-").getBytes(),true);
+				fList.addFilter(columnFilter);
+				fList.addFilter(rowTopFilter);
+				fList.addFilter(rowDownFilter);
+				fList.addFilter(timestampFilter);
+				
 				// get the row range
 				String[] rowRange = new String[2];
-				rowRange[0] = tileID+"-"+ result.get(tileID)[0].getRow();
-				rowRange[1] = tileID+"-"+ result.get(tileID)[1].getRow()+"-*";
-				
+				rowRange[0] = top;
+				rowRange[1] = down+"-*";				
 				rows+="["+rowRange[0]+","+rowRange[1]+"];";
 				
 				final Scan scan = hbase.generateScan(rowRange, fList,
