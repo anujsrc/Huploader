@@ -3,7 +3,7 @@
 	{
 	  "name":"f",
 	  "compression":"GZ",
-	  "versions":"1000",
+	  "versions":"10000",
 	  "min_versions":"1",
 	  "blocksize":"",
 	  "in_memory":"",

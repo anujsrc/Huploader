@@ -1,4 +1,4 @@
-{   "name": "qt-de-0.1",
+{   "name": "qt-0.1",
 	"families":[
 	{
 	  "name":"f",
@@ -22,6 +22,6 @@
 		"subspace":"0.1"
 	},
 	"num_of_points":1000000,
-	"log_file_name":"bixi-qt-de-0.1"
+	"log_file_name":"qt-0.1"
 
 }
