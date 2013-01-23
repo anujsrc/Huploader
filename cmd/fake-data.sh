@@ -24,5 +24,5 @@ MYCONF=${PWD}/../conf/
 
 # jar file which is used to preprocess the files
 # java heap space should be large, because it will generate large data
-${JAVA_HOME}/bin/java -Xms2000m -Xmx4000m -classpath ${MYLIB}:${MYCONF} com.benchmark.dataset.XBixiGenerator $* 
+${JAVA_HOME}/bin/java -Xms1500m -Xmx1500m -classpath ${MYLIB}:${MYCONF} com.benchmark.dataset.XBixiGenerator $* 
 

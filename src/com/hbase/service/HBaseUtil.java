@@ -651,8 +651,7 @@ public class HBaseUtil {
 					scan.addColumn(family[0].getBytes(),columns[i].getBytes());	
 					//System.out.println(family[i]+";"+columns[i]);
 				}	
-			}				
-			System.out.println("finish to get the result scanner...");
+			}							
 			
 		}catch(Exception e){
 			e.printStackTrace();

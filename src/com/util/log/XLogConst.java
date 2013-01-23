@@ -2,6 +2,10 @@ package com.util.log;
 
 public class XLogConst {
 
+	/*
+	 * startRow/endRow is from with-in query,
+	 * shortDist/LongDist is from KNN
+	 */
 	public static String[] main_header = new String[]{
 			"query",
 			"method",
@@ -14,7 +18,9 @@ public class XLogConst {
 			"param",
 			"StartTS",
 			"beforeScanTS",
-			"EndTS"			
+			"EndTS",
+			"startRow(shortDist)",
+			"endRow(longDist)"
 	};
 	
 	

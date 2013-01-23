@@ -17,8 +17,8 @@ import com.util.XConstants;
 import com.util.XTableSchema;
 import com.util.hybrid.XHybridIndex;
 import com.util.quadtree.trie.XQuadTree;
+import com.util.raster.X3DGrid;
 import com.util.raster.XBox;
-import com.util.raster.XRaster;
 
 public class CSVDataUploader {
 
@@ -27,7 +27,7 @@ public class CSVDataUploader {
 	XTableSchema tableSchema = null;
 	XCSVFormat csvFormat = null;
 	XQuadTree quadTree = null;
-	XRaster raster = null;
+	X3DGrid raster = null;
 	XHybridIndex hybrid = null;
 
 	/**
@@ -137,7 +137,7 @@ public class CSVDataUploader {
 				this.quadTree.buildTree(XConstants.ENCODING_DECIMAL);
 			}
 		} else if (indexing == XConstants.INDEX_RASTER) {
-			this.raster = new XRaster(space, min_size_of_subspace,offset);	
+			this.raster = new X3DGrid(space, min_size_of_subspace,offset);	
 			
 		} else if (indexing == XConstants.INDEX_HYBRID){			
 			System.out.print("initialize hybrid");

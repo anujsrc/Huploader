@@ -58,7 +58,9 @@ public class QueryClient {
 				client.callScanQueryAvailable(property);
 			}else if(implement == 1){
 				client.callCopQueryAvailable(property);
-			}			
+			}else if(implement == 2){
+				client.callCopQueryAvailableOnFilter(property);
+			}
 		}else if(query == 2){ // knn
 			if(implement == 0){ // scan
 				client.callScanQueryKNN(property);
@@ -74,7 +76,7 @@ public class QueryClient {
 				client.callCopQueryPoint(property);
 			}		
 			
-		}else{
+		}else{			
 			System.out.println("query parameter is wrong");
 		}
 	}
@@ -123,6 +125,17 @@ public class QueryClient {
 
 		this.queryEngine.copQueryAvailableNear("", latitude, longitude, radius);		
 	}
+	
+	private void callCopQueryAvailableOnFilter(String propertyName){
+		String property = tests.getProperty(propertyName);
+		String[] args = property.split(" ");		
+		Double latitude = Double.parseDouble(args[0]);
+		Double longitude = Double.parseDouble(args[1]);
+		Double radius = Double.parseDouble(args[2]);
+
+		this.queryEngine.copQueryAvailableNearOnFilter("", latitude, longitude, radius);		
+	}	
+	
 	/**Location query 2 ***/
 	private void callScanQueryPoint(String propertyName){
 		String property = tests.getProperty(propertyName);

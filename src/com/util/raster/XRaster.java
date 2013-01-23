@@ -6,7 +6,9 @@ import java.awt.geom.Rectangle2D.Double;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
-/**
+
+
+/**@deprecated
  * This is a raster of the space, the stripe of row is the minimum size of subspace, 
  * The number of columns is defined as a constant number(see 100), 
  * and the version dimension will store the multiple objects which are located into the same box(row and column)

@@ -52,5 +52,5 @@ MYLIB=${PWD}/../bin/huploader.jar
 MYCONF=${PWD}/../conf/
 
 echo $*
-${JAVA_HOME}/bin/java -Xms2000m -Xmx4000m -classpath ${COMMONLIB}:${HADOOPLIB}:${HADOOPCONF}:${HBASELIB}:${HBASECONF}:${MAPRLIB}:${MYLIB}:${MYCONF}   com.hbase.insert.csv.CSVDataUploader $*
+${JAVA_HOME}/bin/java -Xms1500m -Xmx1500m -classpath ${COMMONLIB}:${HADOOPLIB}:${HADOOPCONF}:${HBASELIB}:${HBASECONF}:${MAPRLIB}:${MYLIB}:${MYCONF}   com.hbase.insert.csv.CSVDataUploader $*
 

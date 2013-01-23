@@ -115,14 +115,14 @@ public class BixiQuery4QT extends QueryAbstraction {
 			long match_time = System.currentTimeMillis() - match_s;
 
 			// prepare filter for scan
-			FilterList fList = new FilterList(FilterList.Operator.MUST_PASS_ONE);
+/*			FilterList fList = new FilterList(FilterList.Operator.MUST_PASS_ONE);
 
 			for (String s : indexes) {
 				if (s != null) {
 					Filter rowFilter = hbase.getPrefixFilter(s);
 					fList.addFilter(rowFilter);
 				}
-			}
+			}*/
 
 			Object[] objs = indexes.toArray();
 			Arrays.sort(objs);
@@ -130,7 +130,7 @@ public class BixiQuery4QT extends QueryAbstraction {
 			rowRanges[0] = (String) objs[0];
 			rowRanges[1] = (String) objs[objs.length - 1] + "-*";
 
-			final Scan scan = hbase.generateScan(rowRanges, fList, null, null,
+			final Scan scan = hbase.generateScan(rowRanges, null, null, null,
 					-1);
 
 			System.out.println("start to send the query to coprocessor.....");
@@ -168,9 +168,11 @@ public class BixiQuery4QT extends QueryAbstraction {
 				outStr += ",";
 				outStr += this.timePhase.get(i);
 			}
+			
+			outStr +=","+rowRanges[0];
+			outStr += ","+rowRanges[1];
+			
 			this.writeCSVLog(outStr, 0);
-			// write it to csv file
-			// this.writeCSVLog(timeStr,2);
 
 			return callBack.res.getRes();
 
@@ -208,13 +210,13 @@ public class BixiQuery4QT extends QueryAbstraction {
 			List<String> indexes = quadTree.match(latitude, longitude, radius);
 			long match_time = System.currentTimeMillis() - match_s;
 			// prepare filter for scan
-			FilterList fList = new FilterList(FilterList.Operator.MUST_PASS_ONE);
+/*			FilterList fList = new FilterList(FilterList.Operator.MUST_PASS_ONE);
 			for (String s : indexes) {
 				if (s != null) {
 					Filter rowFilter = hbase.getPrefixFilter(s);
 					fList.addFilter(rowFilter);
 				}
-			}
+			}*/
 			Object[] objs = indexes.toArray();
 			Arrays.sort(objs);
 			String[] rowRanges = new String[2];
@@ -223,7 +225,7 @@ public class BixiQuery4QT extends QueryAbstraction {
 
 			this.timePhase.add(System.currentTimeMillis());
 			rScanner = this.hbase
-					.getResultSet(rowRanges, fList, null, null, -1);
+					.getResultSet(rowRanges, null, null, null, -1);
 			int count = 0;
 			int accepted = 0;
 			int row = 0;
@@ -267,6 +269,9 @@ public class BixiQuery4QT extends QueryAbstraction {
 				outStr += ",";
 				outStr += this.timePhase.get(i);
 			}
+			outStr +=","+rowRanges[0];
+			outStr += ","+rowRanges[1];
+			
 			this.writeCSVLog(outStr, 0);
 
 		} catch (Exception e) {
@@ -404,18 +409,7 @@ public class BixiQuery4QT extends QueryAbstraction {
 		return null;
 	}
 
-	@Override
-	public String scanQueryPoint(double latitude, double longitude) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
-	@Override
-	public HashMap<String,Double> copQueryAvailableKNN(String timestamp, double latitude,
-			double longitude, int n) {
-		
-		return null;
-	}
 
 	@Override
 	public TreeMap<Double, String> scanQueryAvailableKNN(String timestamp,
@@ -457,21 +451,21 @@ public class BixiQuery4QT extends QueryAbstraction {
 						radius);
 
 				// prepare filter for scan
-				FilterList fList = new FilterList(
+/*				FilterList fList = new FilterList(
 						FilterList.Operator.MUST_PASS_ONE);
 				for (String s : indexes) {
 					if (s != null) {
 						Filter rowFilter = this.hbase.getPrefixFilter(s);
 						fList.addFilter(rowFilter);
 					}
-				}
+				}*/
 				Object[] objs = indexes.toArray();
 				Arrays.sort(objs);
 				String[] rowRanges = new String[2];
 				rowRanges[0] = (String) objs[0];
 				rowRanges[1] = (String) objs[objs.length - 1] + "-*";
 
-				rScanner = this.hbase.getResultSet(rowRanges, fList, null,
+				rScanner = this.hbase.getResultSet(rowRanges, null, null,
 						null, -1);
 				count = 0;
 				results.clear();
@@ -544,4 +538,22 @@ public class BixiQuery4QT extends QueryAbstraction {
 		return sorted;
 	}
 
+	@Override
+	public String scanQueryPoint(double latitude, double longitude) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public HashMap<String,Double> copQueryAvailableKNN(String timestamp, double latitude,
+			double longitude, int n) {
+		
+		return null;
+	}
+	
+	public  List<String> copQueryAvailableNearOnFilter(String timestamp,
+			double latitude, double longitude, final double radius){
+		return null;
+	}
+	
 }

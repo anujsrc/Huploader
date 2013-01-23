@@ -3,16 +3,16 @@ package com.util.quadtree.trie;
 
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.util.XConstants;
 
 
 public class TestXQuadTree {
-
-    public static void main(String args[]){
-    	
-    	Point2D.Double offset = new Point2D.Double(90,180);
+	
+	public static void test1(){
+	   	Point2D.Double offset = new Point2D.Double(90,180);
     	Rectangle2D.Double rect = new Rectangle2D.Double(
    			 -90,-180,180,360);
    	
@@ -69,6 +69,28 @@ public class TestXQuadTree {
     	//Test for the query neighbor
        	subspace = tree.locate(45.49520,73.56328);
     	System.out.println("============");
-    	subspace.print();*/
+    	subspace.print();*/		
+	}
+	
+	public static ArrayList<String> combine(String[] items){
+		ArrayList<String> result = new ArrayList<String>();
+		
+		
+		return result; 
+	}
+
+    public static void main(String args[]){
+    	//TestXQuadTree.test1();
+    	
+    	String[] items = new String[]{
+    			"2300",
+    			"2301",
+    			"2302",
+    			"2303",
+    			"2310"
+    	};
+    	
+    	
+    	
     }
 }

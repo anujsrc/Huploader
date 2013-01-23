@@ -21,7 +21,7 @@ import com.util.hybrid.XHybridIndex;
 import com.util.log.XLogCSV;
 import com.util.log.XLogConst;
 import com.util.quadtree.trie.XQuadTree;
-import com.util.raster.XRaster;
+import com.util.raster.X3DGrid;
 
 public abstract class QueryAbstraction {
 	
@@ -29,7 +29,7 @@ public abstract class QueryAbstraction {
 	protected HBaseUtil hbase = null;	
 	protected XTableSchema tableSchema = null;	
 	protected XQuadTree quadTree = null;
-	protected XRaster raster = null;
+	protected X3DGrid raster = null;
 	protected XHybridIndex hybrid = null;
 	protected XCSVFormat csvFormat = null;
 	
@@ -147,7 +147,7 @@ public abstract class QueryAbstraction {
 				this.quadTree.buildTree(XConstants.ENCODING_DECIMAL);
 			}
 		} else if (indexing == XConstants.INDEX_RASTER) {
-			raster = new XRaster(space, min_size_of_subspace,offset);	
+			raster = new X3DGrid(space, min_size_of_subspace,offset);	
 			
 		} else if(indexing == XConstants.INDEX_HYBRID){
 			this.hybrid = new XHybridIndex(space,this.tableSchema.getTileSize(),offset,min_size_of_subspace);
@@ -247,7 +247,16 @@ public abstract class QueryAbstraction {
 	public abstract List<String> copQueryAvailableNear(String timestamp,
 			final double latitude, final double longitude,final double radius);
 	
-	
+	/**
+	 * This is to evaluate the different implementation : This is with Filter
+	 * @param timestamp
+	 * @param latitude
+	 * @param longitude
+	 * @param radius
+	 */	
+	public abstract List<String> copQueryAvailableNearOnFilter(String timestamp,
+			double latitude, double longitude, final double radius);
+			
 	/**
 	 *  A scan method that will fetch the row from the RS and compute the
 	 * distance of the points from the given ones.
@@ -258,7 +267,6 @@ public abstract class QueryAbstraction {
 	 */
 	public abstract HashMap<String,String> scanQueryAvailableNear(String timestamp,
 			final double latitude, final double longitude, final double radius);	
-	
 	
 	/**
 	 * This is for point query with Coprocessor
