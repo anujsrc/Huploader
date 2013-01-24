@@ -328,7 +328,7 @@ public class BixiImplementation extends BaseEndpointCoprocessor implements BixiP
 							double distance = resPoint.distance(point);
 
 							if (distance <= radius) {										
-								results.getRes().add(id);
+								results.getRes().add(id);								
 							}	
 							id = null;
 							lat = -1;

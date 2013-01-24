@@ -695,7 +695,7 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 			String outStr = "";
 			outStr += "within," + "cop," + callBack.res.getRes().size() + ","
 					+ callBack.res.getCells() + "," + callBack.res.getRows()
-					+ "," + exe_time + "," + "-1" + ","
+					+ "," + exe_time + "," + iteration + ","
 					+ this.tableSchema.getSubSpace() + "," + radius;
 
 			for (int i = 0; i < this.timePhase.size(); i++) {
@@ -748,96 +748,94 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 			HashMap<String, double[]> results = new HashMap<String, double[]>();
 
 			// Step2: trigger a scan to get the points based on the above window
-			int iteration = 1;
+			int iteration = 0;
 			double radius = (init_radius > this.tableSchema.getSubSpace()) ? init_radius
 					: this.tableSchema.getSubSpace();
+			List<Long> timestamps = new ArrayList<Long>();
+			timestamps.add(Long.valueOf(1));
+			timestamps.add(Long.valueOf(2));
+			timestamps.add(Long.valueOf(3));
+			Filter timestampFilter = hbase.getTimeStampFilter(timestamps);
+			
+			/** Step3: send request to trigger scan execution **/
 			long match_s = System.currentTimeMillis();
-			this.timePhase.add(System.currentTimeMillis());
-
+			this.timePhase.add(System.currentTimeMillis());			
+			
 			do {
 				String str = "iteration" + iteration + "; count=>" + count
 						+ ";radius=>" + radius;
 				System.out.println(str);
-				Hashtable<String, XBox[]> result = this.hybrid.match(latitude,
-						longitude, radius);
-
-				// prepare filter for scan
-				// format the key ranges and column ranges
-				Hashtable<String, String[]> organizedKeys = this
-						.reOrganizeKeys(result);
-				ArrayList<String> tempArray = new ArrayList<String>(
-						organizedKeys.keySet());
-				Collections.sort(tempArray);
-
-				// get the row range
-				String[] rowRange = new String[2];
-				rowRange[0] = (String) tempArray.get(0);
-				rowRange[1] = tempArray.get(tempArray.size() - 1) + "-*";
-				System.out.println("row Range: " + rowRange[0] + ","
-						+ rowRange[1]);
-
-				// prepare filter for scan
-				FilterList fList = new FilterList(
-						FilterList.Operator.MUST_PASS_ONE);
-				List<Long> timestamps = new ArrayList<Long>();
-				timestamps.add(Long.valueOf(1));
-				timestamps.add(Long.valueOf(2));
-				timestamps.add(Long.valueOf(3));
-				Filter timestampFilter = hbase.getTimeStampFilter(timestamps);
-				for (String s : result.keySet()) {
-					if (s != null) {
-						String top = s + "-" + result.get(s)[0].getRow();
-						String down = s + "-" + result.get(s)[1].getRow();
-						Filter rowTopFilter = hbase.getBinaryFilter(">=", top);
-						Filter rowDownFilter = hbase.getBinaryFilter("<=", down);
-						Filter columnFilter =hbase.getColumnRangeFilter((result.get(s)[0].getColumn()+"-").getBytes(),
-								true,(result.get(s)[1].getColumn()+1+"-").getBytes(),true);
-						
-						FilterList subList = new FilterList(
-								FilterList.Operator.MUST_PASS_ALL);
-						subList.addFilter(rowTopFilter);
-						subList.addFilter(rowDownFilter);
-						subList.addFilter(columnFilter);
-						subList.addFilter(timestampFilter);
-						fList.addFilter(subList);
-					}
-				}
-
-				rScanner = this.hbase.getResultSet(rowRange, fList,
-						new String[] { this.tableSchema.getFamilyName() },
-						null, this.tableSchema.getMaxVersions());
+				
+				final double x = Math.abs(latitude);
+				final double y = Math.abs(longitude);
+				Hashtable<String, XBox[]> result = this.hybrid.match(x,
+						y, radius);			
+				
 				count = 0;
 				results.clear();
-				for (Result r : rScanner) {
+				
+				
+				for(String tileID: result.keySet()){				
+					
+					String top = tileID+"-"+ result.get(tileID)[0].getRow();
+					String down = tileID+"-"+ result.get(tileID)[1].getRow();
+					Filter rowTopFilter = hbase.getBinaryFilter(">=", top);
+					Filter rowDownFilter = hbase.getBinaryFilter("<=", down);
+					
+					FilterList fList = new FilterList(FilterList.Operator.MUST_PASS_ALL);				
+					Filter columnFilter =hbase.getColumnRangeFilter((result.get(tileID)[0].getColumn()+"-").getBytes(),true,					
+					(XCommon.IncFormatString(result.get(tileID)[1].getColumn())+"-").getBytes(),true);
+					fList.addFilter(columnFilter);
+					fList.addFilter(rowTopFilter);
+					fList.addFilter(rowDownFilter);
+					fList.addFilter(timestampFilter);
+										
+					// get the row range
+					String[] rowRange = new String[2];
+					rowRange[0] = top;
+					rowRange[1] = down+"-*";				
+					System.out.println("rows: "+rowRange[0]+";"+rowRange[1]);
+					
+					rScanner = this.hbase.getResultSet(rowRange, fList,
+							new String[] { this.tableSchema.getFamilyName() },
+							null, this.tableSchema.getMaxVersions());
 
-					NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> resultMap = r
-							.getMap();
+					for (Result r : rScanner) {
 
-					for (byte[] family : resultMap.keySet()) {
-						NavigableMap<byte[], NavigableMap<Long, byte[]>> columns = resultMap
-								.get(family);
-						for (byte[] col : columns.keySet()) {
+						NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> resultMap = r
+								.getMap();
 
-							count++;
+						for (byte[] family : resultMap.keySet()) {
+							NavigableMap<byte[], NavigableMap<Long, byte[]>> columns = resultMap
+									.get(family);
+							for (byte[] col : columns.keySet()) {
 
-							NavigableMap<Long, byte[]> values = columns
-									.get(col);
+								count++;
 
-							String id = Bytes.toString(values.get((Long
-									.valueOf(1))));
-							// Bytes.toDouble cannot be used
-							double lat = java.lang.Double.valueOf(Bytes
-									.toString(values.get(Long.valueOf(2))));
-							double lon = java.lang.Double.valueOf(Bytes
-									.toString(values.get(Long.valueOf(3))));
-							results.put(id, new double[] { lat, lon });
+								NavigableMap<Long, byte[]> values = columns
+										.get(col);
+
+								String id = Bytes.toString(values.get((Long
+										.valueOf(1))));
+								// Bytes.toDouble cannot be used
+								double lat = java.lang.Double.valueOf(Bytes
+										.toString(values.get(Long.valueOf(2))));
+								double lon = java.lang.Double.valueOf(Bytes
+										.toString(values.get(Long.valueOf(3))));
+								results.put(id, new double[] { lat, lon });
+							}
 						}
-					}
-				}
+					} // end of sub-query in a range query										
+				}// end of one radius query
+			
+				str = "iteration" + iteration + "; count=>" + count
+						+ ";radius=>" + radius;
+				System.out.println(str);
+				
 				// Step3: get the result,estimate the window circle next
 				// depending on the previous step result, util we got the K
 				// nodes
-				radius = radius*(1+ (n*1.0/count));//init_radius * (iteration + 1);
+				radius = radius * Math.sqrt(4*n*1.0 / (Math.PI*count));//radius*(1+ (n*1.0/count));
 
 			} while (count < n && (++iteration > 0));
 
@@ -866,7 +864,7 @@ public class BixiQuery4Hybrid extends QueryAbstraction {
 
 			sorted  = new TreeMap<java.lang.Double, String>(distanceMap);
 
-			System.out.println("all values: " + sorted.values().toString());
+			//System.out.println("all values: " + sorted.values().toString());
 			// write to csv file
 			String outStr = "";
 			outStr += "knn," + "scan," + sorted.size() + "," + count + ","

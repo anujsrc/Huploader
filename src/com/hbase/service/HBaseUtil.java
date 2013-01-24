@@ -614,8 +614,7 @@ public class HBaseUtil {
 				}	
 			}			
 
-			rscanner = this.table.getScanner(scan);
-			System.out.println("finsh to get the result scanner...");
+			rscanner = this.table.getScanner(scan);			
 			
 		}catch(Exception e){
 			e.printStackTrace();

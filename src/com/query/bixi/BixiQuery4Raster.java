@@ -456,7 +456,7 @@ public class BixiQuery4Raster extends QueryAbstraction {
 			List<String> resultsList = new ArrayList<String>();
 
 			// Step2: trigger a scan to get the points based on the above window
-			int iteration = 1;
+			int iteration = 0;
 
 			long match_s = System.currentTimeMillis();
 			double radius = (init_radius > this.tableSchema.getSubSpace()) ? init_radius
@@ -504,7 +504,8 @@ public class BixiQuery4Raster extends QueryAbstraction {
 				// Step3: get the result,estimate the window circle next
 				// depending on the previous step result, util we got the K
 				// nodes
-				radius = init_radius * (iteration + 1);
+				//radius = init_radius * (iteration + 1);
+				radius = radius * Math.sqrt(4*n*1.0 / (Math.PI*count));//radius*(1+ (n*1.0/count));
 
 			} while (count < n && (++iteration > 0));
 			String str = "iteration" + iteration + "; count=>" + count
@@ -536,7 +537,7 @@ public class BixiQuery4Raster extends QueryAbstraction {
 			this.timePhase.add(System.currentTimeMillis());
 			sorted = new TreeMap<Double, String>(distanceMap);
 
-			System.out.println("all values: " + sorted.values().toString());
+			//System.out.println("all values: " + sorted.values().toString());
 			// write to csv file
 			String outStr = "";
 			outStr += "knn," + "scan," + sorted.size() + "," + count + ","

@@ -3,6 +3,7 @@ package com.query.bixi;
 import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
@@ -283,6 +284,296 @@ public class BixiQuery4QT extends QueryAbstraction {
 		return results;
 	}
 
+
+
+	@Override
+	public TreeMap<Double, String> scanQueryAvailableKNN(String timestamp,
+			double latitude, double longitude, int n) {
+		TreeMap<Double, String> sorted = null;
+
+		try {
+
+			this.getCSVLog(0);
+
+			long sTime = System.currentTimeMillis();
+			this.timePhase.clear();
+			this.timePhase.add(System.currentTimeMillis());
+
+			// Step1: estimate the window circle for the first time
+			long total_points = this.tableSchema.getTotalNumberOfPoints();
+			double areaOfMBB = this.tableSchema.getEntireSpace().width
+					* this.tableSchema.getEntireSpace().height;
+			double DensityOfMBB = total_points / areaOfMBB;
+			double init_radius = Math.sqrt(n / DensityOfMBB);
+
+			longitude = Math.abs(longitude);
+			int count = 0;
+			ResultScanner rScanner = null;
+			HashMap<String, String> results = new HashMap<String, String>();
+
+			// Step2: trigger a scan to get the points based on the above window
+			int iteration = 0;
+			double radius = (init_radius > this.tableSchema.getSubSpace()) ? init_radius
+					: this.tableSchema.getSubSpace();
+			long match_s = System.currentTimeMillis();
+			this.timePhase.add(System.currentTimeMillis());
+			
+			do {
+				String str = "iteration" + iteration + "; count=>" + count
+						+ ";radius=>" + radius;
+				System.out.println(str);
+				List<String> indexes = this.quadTree.match(latitude, longitude,
+						radius);
+
+				Object[] objs = indexes.toArray();
+				Arrays.sort(objs);
+				String[] rowRanges = new String[2];
+				rowRanges[0] = (String) objs[0];
+				rowRanges[1] = (String) objs[objs.length - 1] + "-*";
+
+				rScanner = this.hbase.getResultSet(rowRanges, null, null,
+						null, -1);
+				count = 0;
+				results.clear();
+				for (Result r : rScanner) {
+					// System.out.println(Bytes.toString(r.getRow()) + "=>");
+					List<KeyValue> pairs = r.list();
+					for (KeyValue kv : pairs) {
+						// System.out.println(Bytes.toString(kv.getRow())+"=>"+Bytes.toString(kv.getValue()));
+						results.put(Bytes.toString(kv.getQualifier()),
+								Bytes.toString(kv.getValue()));
+						count++;
+					}
+				}
+
+				// Step3: get the result,estimate the window circle next
+				// depending on the previous step result, util we got the K
+				// nodes
+				radius = radius * Math.sqrt(4*n*1.0 / (Math.PI*count));//radius*(1+ (n*1.0/count));
+
+			} while (count < n && (++iteration > 0));
+
+			String str = "iteration" + iteration + "; count=>" + count
+					+ ";radius=>" + radius;
+			System.out.println(str);
+
+			long match_time = System.currentTimeMillis() - match_s;
+
+			// Step4: get all possible points and sort them by the distance and
+			// get the top K
+			Point2D.Double point = new Point2D.Double(latitude, longitude);
+			// result container
+			HashMap<Double, String> distanceMap = new HashMap<Double, String>();
+			for (String key : results.keySet()) {
+				Hashtable<String, String> key_value = this.csvFormat
+						.fromPairString(results.get(key));
+
+				Point2D.Double resPoint = new Point2D.Double(Double.valueOf(
+						key_value.get("lat")).doubleValue(), Double.valueOf(
+						key_value.get("long")).doubleValue());
+				double distance = resPoint.distance(point);
+				distanceMap.put(distance, key);
+			}
+			
+			long eTime = System.currentTimeMillis();
+			this.timePhase.add(System.currentTimeMillis());
+			
+			sorted = new TreeMap<Double, String>(distanceMap);
+
+			//System.out.println("all values: " + sorted.values().toString());
+			// write to csv file
+			String outStr = "";
+			outStr += "knn," + "scan," + sorted.size() + "," + count + ","
+					+ iteration + "," + (eTime - sTime) + "," + match_time
+					+ "," + this.tableSchema.getSubSpace() + "," + n;
+
+			for (int i = 0; i < this.timePhase.size(); i++) {
+				outStr += ",";
+				outStr += this.timePhase.get(i);
+			}
+			outStr+= ","+ sorted.firstKey() + "," + sorted.lastKey();
+			this.writeCSVLog(outStr, 0);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			this.hbase.closeTableHandler();
+			this.closeCSVLog();
+		}
+
+		return sorted;
+	}
+
+
+	@Override
+	public HashMap<String,Double> copQueryAvailableKNN(String timestamp, double latitude,
+			double longitude, int k) {
+		try {
+			// create the log file
+			this.getCSVLog(0);
+			this.getCSVLog(1);
+			//
+			this.timePhase.clear();
+			/** Step1** Call back class definition **/
+
+			class BixiCallBack implements Batch.Callback<RCopResult> {
+				RCopResult res = new RCopResult();
+				int count = 0; // the number of coprocessor
+				QueryAbstraction query = null;
+
+				public BixiCallBack(QueryAbstraction query) {
+					this.query = query;
+				}
+
+				@Override
+				public void update(byte[] region, byte[] row, RCopResult result) {
+					long current = System.currentTimeMillis();
+					count++;
+					res.getRes().addAll(result.getRes()); // to verify the error
+															// when large data
+					res.setStart(result.getStart());
+					res.setEnd(result.getEnd());
+					res.setRows((res.getRows() + result.getRows()));
+					res.setCells(res.getCells() + result.getCells());
+					// write them into csv file
+					String outStr = "";
+					outStr += "within,"
+							+ "cop,"
+							+ result.getParameter()
+							+ ","
+							+ result.getStart()
+							+ ","
+							+ result.getEnd()
+							+ ","
+							+ current
+							+ ","
+							+ result.getRows()
+							+ ","
+							+ result.getCells()
+							+ ","
+							+ result.getKvLength()
+							+ ","
+							+ result.getRes().size()
+							+ ","
+							+ this.query.regionAndRS
+									.get(Bytes.toString(region)) + ","
+							+ Bytes.toString(region);
+					this.query.writeCSVLog(outStr, 1);
+
+				}
+			}
+
+			BixiCallBack callBack = new BixiCallBack(this);
+
+			/** Step2*** generate scan ***/
+
+			// Step1: estimate the window circle for the first time
+			long s_time = System.currentTimeMillis();
+			this.timePhase.add(s_time);
+			
+			long total_points = this.tableSchema.getTotalNumberOfPoints();
+			double areaOfMBB = this.tableSchema.getEntireSpace().width
+					* this.tableSchema.getEntireSpace().height;
+			double DensityOfMBB = total_points / areaOfMBB;
+			double init_radius = Math.sqrt(k / DensityOfMBB);
+
+			longitude = Math.abs(longitude);
+			int count = 0;
+			ResultScanner rScanner = null;
+			HashMap<String, String> results = new HashMap<String, String>();
+
+			int iteration = 1;
+			double radius = (init_radius > this.tableSchema.getSubSpace()) ? init_radius
+					: this.tableSchema.getSubSpace();
+			
+			do {
+				String str = "iteration" + iteration + "; count=>" + count
+						+ ";radius=>" + radius;
+				System.out.println(str);
+				List<String> indexes = this.quadTree.match(latitude, longitude,
+						radius);
+
+				Object[] objs = indexes.toArray();
+				Arrays.sort(objs);
+				String[] rowRanges = new String[2];
+				rowRanges[0] = (String) objs[0];
+				rowRanges[1] = (String) objs[objs.length - 1] + "-*";
+
+				rScanner = this.hbase.getResultSet(rowRanges, null, null,
+						null, -1);
+				count = 0;
+				results.clear();
+				for (Result r : rScanner) {
+					// System.out.println(Bytes.toString(r.getRow()) + "=>");
+					List<KeyValue> pairs = r.list();
+					for (KeyValue kv : pairs) {
+						// System.out.println(Bytes.toString(kv.getRow())+"=>"+Bytes.toString(kv.getValue()));
+						results.put(Bytes.toString(kv.getQualifier()),
+								Bytes.toString(kv.getValue()));
+						count++;
+					}
+				}
+
+				// Step3: get the result,estimate the window circle next
+				// depending on the previous step result, util we got the K
+				// nodes
+				radius = radius*(1+ (k*1.0/count));
+
+			} while (count < k && (++iteration > 0));
+
+			String str = "iteration" + iteration + "; count=>" + count
+					+ ";radius=>" + radius;
+			System.out.println(str);
+			
+			long cop_end = System.currentTimeMillis();
+			this.timePhase.add(cop_end);
+
+			long exe_time = cop_end - s_time;
+			
+			java.lang.Double[] tempArray = (java.lang.Double[])callBack.res.getDistances().values().toArray();			
+			Collections.sort(Arrays.asList(tempArray));
+			
+			// write to csv file
+			String outStr = "";
+			outStr += "within," + "cop," + callBack.res.getRes().size() + ","
+					+ callBack.res.getCells() + "," + callBack.res.getRows()
+					+ "," + exe_time + "," + iteration + ","
+					+ this.tableSchema.getSubSpace() + "," + radius;
+
+			for (int i = 0; i < this.timePhase.size(); i++) {
+				outStr += ",";
+				outStr += this.timePhase.get(i);
+			}
+			
+			outStr += "," + tempArray[0] + "," + tempArray[tempArray.length-1];
+			this.writeCSVLog(outStr, 0);
+
+			return  callBack.res.getDistances();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		} catch (Throwable ee) {
+			ee.printStackTrace();
+		} finally {
+			hbase.closeTableHandler();
+			this.closeCSVLog();
+		}
+
+		return null;
+	}
+	
+	public  List<String> copQueryAvailableNearOnFilter(String timestamp,
+			double latitude, double longitude, final double radius){
+		return null;
+	}
+	
+	
+	@Override
+	public String scanQueryPoint(double latitude, double longitude) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
 	@Override
 	public String copQueryPoint(final double latitude, final double longitude) {
 
@@ -409,151 +700,5 @@ public class BixiQuery4QT extends QueryAbstraction {
 		return null;
 	}
 
-
-
-	@Override
-	public TreeMap<Double, String> scanQueryAvailableKNN(String timestamp,
-			double latitude, double longitude, int n) {
-		TreeMap<Double, String> sorted = null;
-
-		try {
-
-			this.getCSVLog(0);
-
-			long sTime = System.currentTimeMillis();
-			this.timePhase.clear();
-			this.timePhase.add(System.currentTimeMillis());
-
-			// Step1: estimate the window circle for the first time
-			long total_points = this.tableSchema.getTotalNumberOfPoints();
-			double areaOfMBB = this.tableSchema.getEntireSpace().width
-					* this.tableSchema.getEntireSpace().height;
-			double DensityOfMBB = total_points / areaOfMBB;
-			double init_radius = Math.sqrt(n / DensityOfMBB);
-
-			longitude = Math.abs(longitude);
-			int count = 0;
-			ResultScanner rScanner = null;
-			HashMap<String, String> results = new HashMap<String, String>();
-
-			// Step2: trigger a scan to get the points based on the above window
-			int iteration = 1;
-			double radius = (init_radius > this.tableSchema.getSubSpace()) ? init_radius
-					: this.tableSchema.getSubSpace();
-			long match_s = System.currentTimeMillis();
-			this.timePhase.add(System.currentTimeMillis());
-			
-			do {
-				String str = "iteration" + iteration + "; count=>" + count
-						+ ";radius=>" + radius;
-				System.out.println(str);
-				List<String> indexes = this.quadTree.match(latitude, longitude,
-						radius);
-
-				// prepare filter for scan
-/*				FilterList fList = new FilterList(
-						FilterList.Operator.MUST_PASS_ONE);
-				for (String s : indexes) {
-					if (s != null) {
-						Filter rowFilter = this.hbase.getPrefixFilter(s);
-						fList.addFilter(rowFilter);
-					}
-				}*/
-				Object[] objs = indexes.toArray();
-				Arrays.sort(objs);
-				String[] rowRanges = new String[2];
-				rowRanges[0] = (String) objs[0];
-				rowRanges[1] = (String) objs[objs.length - 1] + "-*";
-
-				rScanner = this.hbase.getResultSet(rowRanges, null, null,
-						null, -1);
-				count = 0;
-				results.clear();
-				for (Result r : rScanner) {
-					// System.out.println(Bytes.toString(r.getRow()) + "=>");
-					List<KeyValue> pairs = r.list();
-					for (KeyValue kv : pairs) {
-						// System.out.println(Bytes.toString(kv.getRow())+"=>"+Bytes.toString(kv.getValue()));
-						results.put(Bytes.toString(kv.getQualifier()),
-								Bytes.toString(kv.getValue()));
-						count++;
-					}
-				}
-
-				// Step3: get the result,estimate the window circle next
-				// depending on the previous step result, util we got the K
-				// nodes
-				radius = radius*(1+ (n*1.0/count));//init_radius * (iteration + 1);
-
-			} while (count < n && (++iteration > 0));
-
-			String str = "iteration" + iteration + "; count=>" + count
-					+ ";radius=>" + radius;
-			System.out.println(str);
-
-			long match_time = System.currentTimeMillis() - match_s;
-
-			// Step4: get all possible points and sort them by the distance and
-			// get the top K
-			Point2D.Double point = new Point2D.Double(latitude, longitude);
-			// result container
-			HashMap<Double, String> distanceMap = new HashMap<Double, String>();
-			for (String key : results.keySet()) {
-				Hashtable<String, String> key_value = this.csvFormat
-						.fromPairString(results.get(key));
-
-				Point2D.Double resPoint = new Point2D.Double(Double.valueOf(
-						key_value.get("lat")).doubleValue(), Double.valueOf(
-						key_value.get("long")).doubleValue());
-				double distance = resPoint.distance(point);
-				distanceMap.put(distance, key);
-			}
-			
-			long eTime = System.currentTimeMillis();
-			this.timePhase.add(System.currentTimeMillis());
-			
-			sorted = new TreeMap<Double, String>(distanceMap);
-
-			System.out.println("all values: " + sorted.values().toString());
-			// write to csv file
-			String outStr = "";
-			outStr += "knn," + "scan," + sorted.size() + "," + count + ","
-					+ iteration + "," + (eTime - sTime) + "," + match_time
-					+ "," + this.tableSchema.getSubSpace() + "," + n;
-
-			for (int i = 0; i < this.timePhase.size(); i++) {
-				outStr += ",";
-				outStr += this.timePhase.get(i);
-			}
-			outStr+= ","+ sorted.firstKey() + "," + sorted.lastKey();
-			this.writeCSVLog(outStr, 0);
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			this.hbase.closeTableHandler();
-			this.closeCSVLog();
-		}
-
-		return sorted;
-	}
-
-	@Override
-	public String scanQueryPoint(double latitude, double longitude) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public HashMap<String,Double> copQueryAvailableKNN(String timestamp, double latitude,
-			double longitude, int n) {
-		
-		return null;
-	}
-	
-	public  List<String> copQueryAvailableNearOnFilter(String timestamp,
-			double latitude, double longitude, final double radius){
-		return null;
-	}
 	
 }
