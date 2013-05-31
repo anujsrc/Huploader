@@ -143,10 +143,14 @@ public class Uploader4HybridIndex extends CSVDataUploader{
 	protected String[] getCellIndicator(String lan, String longitude, String id) {
 		if(lan == null || longitude == null)
 			return null;
+		
+		double d_lan = Double.valueOf(lan).doubleValue()>100? 99.9999:Double.valueOf(lan).doubleValue();
+		double d_longitude = Double.valueOf(longitude).doubleValue()>100? 99.99:Double.valueOf(longitude).doubleValue();
+		
 		String indicator[] = new String[3];		
 		if(this.hybrid != null){
 			
-			String[] keys = this.hybrid.locate(Double.valueOf(lan).doubleValue(),Double.valueOf(longitude).doubleValue());
+			String[] keys = this.hybrid.locate(d_lan,d_longitude);
 			indicator[0] = keys[0];
 			indicator[1] = keys[1]+"-"+id;
 			// indicator[2] = "1"; // this does not make sense

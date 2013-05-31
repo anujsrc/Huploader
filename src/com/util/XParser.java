@@ -6,8 +6,9 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+
 
 public class XParser {
 	
@@ -16,23 +17,35 @@ public class XParser {
 	 * @param schemaFile
 	 * @return
 	 */
-	public static JSONObject getTableDescription(String schemaFile){		
+	public static JSONObject getTableDescription(String schemaFile) throws Exception{
+		FileReader fr = null;
 		try{		
 			File file = new File(schemaFile);
 			if(file.exists()){
 				
-				FileReader fr = new FileReader(file);
-				JSONParser parser = new JSONParser();
-				JSONObject obj = (JSONObject)parser.parse(fr);							
+				fr = new FileReader(file);				
+/*				BufferedReader reader = new BufferedReader(fr);
+				StringBuilder builder = new StringBuilder();
+				for (String line = null; (line = reader.readLine()) != null;) {
+				    builder.append(line).append("\n");
+				}
+				System.out.println(builder.toString());
+				JSONTokener tokener = new JSONTokener(builder.toString());*/
 				
+				JSONTokener tokener = new JSONTokener(fr);				
+				JSONObject obj =  new JSONObject(tokener);
+				 				
 				return obj;
 				
 			}else{
 				System.out.println(schemaFile+" does not exist");
-			}
+			}			
 			
 		}catch(Exception e){
 			e.printStackTrace();
+		}finally{
+			if(fr != null)
+				fr.close();
 		}
 		return null;
 	}
@@ -93,4 +106,16 @@ public class XParser {
 		return null;
 	}	
 
+	public static void main(String[] args){
+		try{
+			JSONObject object = XParser.getTableDescription("./schema/bixi.raster.1.schema");
+			System.out.println(object.toString());	
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+	}
+	
+	
+	
 }

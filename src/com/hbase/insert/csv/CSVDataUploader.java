@@ -152,7 +152,7 @@ public class CSVDataUploader {
 					}
 					
 					// generate cell indicator and cell value
-					long s = System.currentTimeMillis();
+					long s = System.currentTimeMillis();					
 					String[] cell_indicator = this.getCellIndicator(values[lan_index],values[long_index],values[id_index]);
 					indicateTime+=(System.currentTimeMillis()-s);
 					// for quad Tree indexing, there is no need to store id in a cell because id is the qualifer
@@ -317,16 +317,20 @@ public class CSVDataUploader {
 	protected String[] getCellIndicator(String lan, String longitude,String id){		
 		if(lan == null || longitude == null)
 			return null;
+
+		double d_lan = Double.valueOf(lan).doubleValue()>100? 99.9999:Double.valueOf(lan).doubleValue();
+		double d_longitude = Double.valueOf(longitude).doubleValue()>100? 99.99:Double.valueOf(longitude).doubleValue();
+
 		String indicator[] = new String[3];		
-		if(this.quadTree != null){
+		if(this.quadTree != null){			
 			
-			XQuadTree node = quadTree.locate(Double.valueOf(lan).doubleValue(),Double.valueOf(longitude).doubleValue());
+			XQuadTree node = quadTree.locate(d_lan,d_longitude);
 			indicator[0] = node.getIndex();
 			indicator[1] = id;
 			indicator[2] = "1";
 		}
 		if(this.raster != null){
-			XBox box = raster.locate(Double.valueOf(lan).doubleValue(),Double.valueOf(longitude).doubleValue());
+			XBox box = raster.locate(d_lan,d_longitude);
 			indicator[0] = box.getRow();
 			indicator[1] = box.getColumn();
 			indicator[2] = String.valueOf(box.getObjectCount());

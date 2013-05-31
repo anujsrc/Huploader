@@ -4,15 +4,22 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.Point2D.Double;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 
 public class XTableSchema {
 	
 	JSONObject table = null;
 	
 	public XTableSchema(String schema_desc_file){
-		this.table = XParser.getTableDescription(schema_desc_file);
+		try {
+			this.table = XParser.getTableDescription(schema_desc_file);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -22,7 +29,7 @@ public class XTableSchema {
 		String name = null;
 		try{
 			if(this.table != null){
-				if(this.table.containsKey(XHBaseConstant.TABLE_DESC_NAME)){
+				if(this.table.has(XHBaseConstant.TABLE_DESC_NAME)){
 					name = (String)this.table.get(XHBaseConstant.TABLE_DESC_NAME);
 				}
 			}
@@ -42,7 +49,7 @@ public class XTableSchema {
 		String prefix = null;
 		try{
 			if(this.table != null){
-				if(this.table.containsKey(XHBaseConstant.TABLE_DESC_LOG_NAME_PREFIX)){
+				if(this.table.has(XHBaseConstant.TABLE_DESC_LOG_NAME_PREFIX)){
 					prefix = (String)this.table.get(XHBaseConstant.TABLE_DESC_LOG_NAME_PREFIX);
 				}
 			}
@@ -58,7 +65,7 @@ public class XTableSchema {
 		long totalNum = -1;
 		try{
 			if(this.table != null){
-				if(this.table.containsKey(XHBaseConstant.TOTAL_NUMBER_OF_POINTS)){
+				if(this.table.has(XHBaseConstant.TOTAL_NUMBER_OF_POINTS)){
 					totalNum = (Long)(this.table.get(XHBaseConstant.TOTAL_NUMBER_OF_POINTS));
 				}
 			}
@@ -76,7 +83,7 @@ public class XTableSchema {
 	public JSONObject getObject(String key){		
 		try{			
 			if(this.table != null){
-				if(this.table.containsKey(key)){
+				if(this.table.has(key)){
 					return (JSONObject)this.table.get(key);
 				}
 			}
@@ -93,7 +100,7 @@ public class XTableSchema {
 	public JSONArray getObjectArray(String key){		
 		try{			
 			if(this.table != null){
-				if(this.table.containsKey(key)){
+				if(this.table.has(key)){
 					return (JSONArray)this.table.get(key);
 				}
 			}
@@ -109,7 +116,13 @@ public class XTableSchema {
 	 * For csv file, there is only one family
 	 */
 	public JSONObject getFamilyObject(){		
-		return (JSONObject)(this.getObjectArray(XHBaseConstant.TABLE_DESC_FAMILIES).get(0));		
+		try {
+			return (JSONObject)(this.getObjectArray(XHBaseConstant.TABLE_DESC_FAMILIES).get(0));
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
 	}
 	/**
 	 * get family name
@@ -117,11 +130,15 @@ public class XTableSchema {
 	 */
 	public String getFamilyName(){
 		JSONObject family = this.getFamilyObject();
-		if(family.containsKey(XHBaseConstant.TABLE_DESC_FNAME)){
-			return (String)family.get(XHBaseConstant.TABLE_DESC_FNAME);
-		}else{
-			return null;
+		if(family.has(XHBaseConstant.TABLE_DESC_FNAME)){
+			try {
+				return (String)family.get(XHBaseConstant.TABLE_DESC_FNAME);
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
+		return null;
 		
 	}
 	
@@ -131,11 +148,19 @@ public class XTableSchema {
 	 */
 	public int getMaxVersions(){
 		JSONObject family = this.getFamilyObject();
-		if(family.containsKey(XHBaseConstant.TABLE_DESC_VERSIONS)){
-			return Integer.valueOf((String)family.get(XHBaseConstant.TABLE_DESC_VERSIONS));
-		}else{
-			return 1;
+		if(family.has(XHBaseConstant.TABLE_DESC_VERSIONS)){
+			try {
+				return Integer.valueOf((String)family.get(XHBaseConstant.TABLE_DESC_VERSIONS));
+			} catch (NumberFormatException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
+		
+		return 1;
 	}	
 	
 	/**
@@ -150,11 +175,19 @@ public class XTableSchema {
 	 */
 	public double getSubSpace(){
 		JSONObject schema = getSchemaObject();
-		if(schema.containsKey(XHBaseConstant.TABLE_DESC_SUBSPACE)){
-			return java.lang.Double.valueOf((String)schema.get(XHBaseConstant.TABLE_DESC_SUBSPACE));
-		}else{
-			return -1;
+		if(schema.has(XHBaseConstant.TABLE_DESC_SUBSPACE)){
+			try {
+				return java.lang.Double.valueOf((String)schema.get(XHBaseConstant.TABLE_DESC_SUBSPACE));
+			} catch (NumberFormatException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
+		return -1;
+	
 	}
 	/**
 	 * Used in Hybrid indexing
@@ -162,11 +195,18 @@ public class XTableSchema {
 	 */
 	public double getTileSize(){
 		JSONObject schema = getSchemaObject();
-		if(schema.containsKey(XHBaseConstant.TABLE_DESC_TILE)){
-			return java.lang.Double.valueOf((String)schema.get(XHBaseConstant.TABLE_DESC_TILE));
-		}else{
-			return -1;
+		if(schema.has(XHBaseConstant.TABLE_DESC_TILE)){
+			try {
+				return java.lang.Double.valueOf((String)schema.get(XHBaseConstant.TABLE_DESC_TILE));
+			} catch (NumberFormatException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
+		return -1;
 	}	
 	/**
 	 * used in indexing.
@@ -174,11 +214,18 @@ public class XTableSchema {
 	 */
 	public int getIndexing(){
 		JSONObject schema = getSchemaObject();
-		if(schema.containsKey(XHBaseConstant.TABLE_DESC_INDEXING)){
-			return Integer.valueOf((String)schema.get(XHBaseConstant.TABLE_DESC_INDEXING));
-		}else{
-			return -1;
+		if(schema.has(XHBaseConstant.TABLE_DESC_INDEXING)){
+			try {
+				return Integer.valueOf((String)schema.get(XHBaseConstant.TABLE_DESC_INDEXING));
+			} catch (NumberFormatException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
+		return -1;
 	}	
 	
 	/**
@@ -187,11 +234,18 @@ public class XTableSchema {
 	 */
 	public int getEncoding(){
 		JSONObject schema = getSchemaObject();
-		if(schema.containsKey(XHBaseConstant.TABLE_DESC_ENCODING)){
-			return Integer.valueOf((String)schema.get(XHBaseConstant.TABLE_DESC_ENCODING));
-		}else{
-			return -1;
+		if(schema.has(XHBaseConstant.TABLE_DESC_ENCODING)){
+			try {
+				return Integer.valueOf((String)schema.get(XHBaseConstant.TABLE_DESC_ENCODING));
+			} catch (NumberFormatException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
+		return -1;	
 	}	
 	
 	
@@ -202,17 +256,23 @@ public class XTableSchema {
 	 */
 	public Rectangle2D.Double getEntireSpace(){
 		JSONObject schema = getSchemaObject();
-		if(schema.containsKey(XHBaseConstant.TABLE_DESC_SPACE)){
-			String space = (String)schema.get(XHBaseConstant.TABLE_DESC_SPACE);
-			String[] items = space.split(",");
-			return new Rectangle2D.Double(java.lang.Double.valueOf(items[0]).doubleValue(),
-											java.lang.Double.valueOf(items[1]).doubleValue(),
-											java.lang.Double.valueOf(items[2]).doubleValue(),
-											java.lang.Double.valueOf(items[3]).doubleValue());
+		if(schema.has(XHBaseConstant.TABLE_DESC_SPACE)){
+			String space;
+			try {
+				space = (String)schema.get(XHBaseConstant.TABLE_DESC_SPACE);
+				String[] items = space.split(",");
+				return new Rectangle2D.Double(java.lang.Double.valueOf(items[0]).doubleValue(),
+												java.lang.Double.valueOf(items[1]).doubleValue(),
+												java.lang.Double.valueOf(items[2]).doubleValue(),
+												java.lang.Double.valueOf(items[3]).doubleValue());				
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
 			
-		}else{
-			return null;
 		}
+		return null;		
 	}	
 	
 	/**
@@ -222,13 +282,20 @@ public class XTableSchema {
 	 */
 	public Point2D.Double getOffset(){
 		JSONObject schema = getSchemaObject();
-		if(schema.containsKey(XHBaseConstant.TABLE_DESC_OFFSET)){
-			String space = (String)schema.get(XHBaseConstant.TABLE_DESC_OFFSET);
-			String[] items = space.split(",");
-			if(items != null || items.length == 2){
-				return new Point2D.Double(java.lang.Double.valueOf(items[0]).doubleValue(),
-						java.lang.Double.valueOf(items[1]).doubleValue());
+		if(schema.has(XHBaseConstant.TABLE_DESC_OFFSET)){
+			String space;
+			try {
+				space = (String)schema.get(XHBaseConstant.TABLE_DESC_OFFSET);
+				String[] items = space.split(",");
+				if(items != null || items.length == 2){
+					return new Point2D.Double(java.lang.Double.valueOf(items[0]).doubleValue(),
+							java.lang.Double.valueOf(items[1]).doubleValue());
+				}				
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
+
 		}
 		return null;
 	}		

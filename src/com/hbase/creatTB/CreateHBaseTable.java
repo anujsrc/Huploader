@@ -1,5 +1,6 @@
 package com.hbase.creatTB;
-import org.json.simple.JSONObject;
+
+import org.json.JSONObject;
 
 import com.hbase.service.HBaseUtil;
 import com.util.XParser;
@@ -23,14 +24,19 @@ public class CreateHBaseTable {
 	
 	
 	public boolean createTable(String schemaFile){
-		JSONObject table = XParser.getTableDescription(schemaFile);
-		if(table != null)
-			return hbase_service.createTable(table);
-		else{
-			System.out.println("jsonobject table is null");
-			return false;
+		JSONObject table;
+		try {
+			table = XParser.getTableDescription(schemaFile);
+			if(table != null)
+				return hbase_service.createTable(table);
+		
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-				
+		
+		System.out.println("jsonobject table is null");
+		return false;		
 	}		
 		
 	

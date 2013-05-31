@@ -40,8 +40,8 @@ import org.apache.hadoop.hbase.io.hfile.Compression;
 import org.apache.hadoop.hbase.regionserver.StoreFile.BloomType;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.MetaUtils;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import com.util.XHBaseConstant;
 
@@ -151,7 +151,7 @@ public class HBaseUtil {
 		
 		try{
 			String table_name = "";
-			if(!table.containsKey(XHBaseConstant.TABLE_DESC_NAME))
+			if(!table.has(XHBaseConstant.TABLE_DESC_NAME))
 				return false;
 			
 			table_name = (String) table.get(XHBaseConstant.TABLE_DESC_NAME);
@@ -347,19 +347,19 @@ public class HBaseUtil {
 			td = new HTableDescriptor(table_name);
 			JSONArray families = (JSONArray)table.get(XHBaseConstant.TABLE_DESC_FAMILIES);
 			
-			for(int i=0;i<families.size();i++){
+			for(int i=0;i<families.length();i++){
 				JSONObject object = (JSONObject)families.get(i);
 				HColumnDescriptor one_family = getColumnDescriptor(object);
 				td.addFamily(one_family);
 			}			
-			if(table.containsKey(XHBaseConstant.TABLE_DESC_MEM_STORE_SIZE)){
+			if(table.has(XHBaseConstant.TABLE_DESC_MEM_STORE_SIZE)){
 				String mem_store_size = (String)table.get(XHBaseConstant.TABLE_DESC_MEM_STORE_SIZE);
 				if(!mem_store_size.isEmpty()){
 					td.setMemStoreFlushSize(Long.valueOf(mem_store_size));
 				}				
 			}
 			
-			if(table.containsKey(XHBaseConstant.TABLE_DESC_MAX_FILE_SIZE)){
+			if(table.has(XHBaseConstant.TABLE_DESC_MAX_FILE_SIZE)){
 				String max_file_size = (String)table.get(XHBaseConstant.TABLE_DESC_MAX_FILE_SIZE);
 				if(!max_file_size.isEmpty()){
 					td.setMaxFileSize(Long.valueOf(max_file_size).longValue());
@@ -394,14 +394,14 @@ public class HBaseUtil {
 		if(family == null)
 			return hcd;		
 		try{
-			if(family.containsKey(XHBaseConstant.TABLE_DESC_FNAME)){
+			if(family.has(XHBaseConstant.TABLE_DESC_FNAME)){
 				hcd = new HColumnDescriptor((String)family.get(XHBaseConstant.TABLE_DESC_FNAME));	
 			}else{
 				return hcd;
 			}
 						
 			// set compression
-			if(family.containsKey(XHBaseConstant.TABLE_DESC_COMPRESSION)){
+			if(family.has(XHBaseConstant.TABLE_DESC_COMPRESSION)){
 				String compression = (String)family.get(XHBaseConstant.TABLE_DESC_COMPRESSION);
 				if(!compression.isEmpty()){				
 					if(compression.equalsIgnoreCase("gz")){
@@ -413,7 +413,7 @@ public class HBaseUtil {
 			}
 			
 			// set versions
-			if(family.containsKey(XHBaseConstant.TABLE_DESC_VERSIONS)){
+			if(family.has(XHBaseConstant.TABLE_DESC_VERSIONS)){
 				String versions = (String)family.get(XHBaseConstant.TABLE_DESC_VERSIONS);
 				if(!versions.isEmpty()){
 					hcd.setMaxVersions(Integer.valueOf(versions));
@@ -421,7 +421,7 @@ public class HBaseUtil {
 			}
 			
 			// set min versions
-			if(family.containsKey(XHBaseConstant.TABLE_DESC_MINVERSIONS)){
+			if(family.has(XHBaseConstant.TABLE_DESC_MINVERSIONS)){
 				String min_versions = (String)family.get(XHBaseConstant.TABLE_DESC_MINVERSIONS);
 				if(!min_versions.isEmpty()){
 					hcd.setMinVersions(Integer.valueOf(min_versions));
@@ -430,7 +430,7 @@ public class HBaseUtil {
 			
 			
 			// set block size
-			if(family.containsKey(XHBaseConstant.TABLE_DESC_BLOCKSIZE)){
+			if(family.has(XHBaseConstant.TABLE_DESC_BLOCKSIZE)){
 				String block_size = (String)family.get(XHBaseConstant.TABLE_DESC_BLOCKSIZE);
 				if(!block_size.isEmpty()){
 					hcd.setBlocksize(Integer.valueOf(block_size));
@@ -439,7 +439,7 @@ public class HBaseUtil {
 			
 			
 			// set in memory
-			if(family.containsKey(XHBaseConstant.TABLE_DESC_INMEMORY)){
+			if(family.has(XHBaseConstant.TABLE_DESC_INMEMORY)){
 				String in_memory = (String)family.get(XHBaseConstant.TABLE_DESC_INMEMORY);
 				if(!in_memory.isEmpty()){				
 					hcd.setInMemory(in_memory.equalsIgnoreCase("true")? true:false);
@@ -448,7 +448,7 @@ public class HBaseUtil {
 			
 			
 			// set block cache
-			if(family.containsKey(XHBaseConstant.TABLE_DESC_BLOCKCACHE)){
+			if(family.has(XHBaseConstant.TABLE_DESC_BLOCKCACHE)){
 				String block_cache = (String)family.get(XHBaseConstant.TABLE_DESC_BLOCKCACHE);
 				if(!block_cache.isEmpty()){
 					hcd.setBlockCacheEnabled(block_cache.equalsIgnoreCase("true")? true:false);
@@ -456,7 +456,7 @@ public class HBaseUtil {
 			}
 			
 			// set bloom filter
-			if(family.containsKey(XHBaseConstant.TABLE_DESC_BLOOMFILTER)){
+			if(family.has(XHBaseConstant.TABLE_DESC_BLOOMFILTER)){
 				String bloom_filter = (String)family.get(XHBaseConstant.TABLE_DESC_BLOOMFILTER);
 				if(!bloom_filter.isEmpty()){
 					if(bloom_filter.equalsIgnoreCase("none")){
@@ -469,7 +469,7 @@ public class HBaseUtil {
 			}
 			
 			// set replication scope
-			if(family.containsKey(XHBaseConstant.TABLE_DESC_REPLICATIONSCOPE)){
+			if(family.has(XHBaseConstant.TABLE_DESC_REPLICATIONSCOPE)){
 				String replica_scope = (String)family.get(XHBaseConstant.TABLE_DESC_REPLICATIONSCOPE);
 				if(!replica_scope.isEmpty()){
 					hcd.setScope(Integer.valueOf(replica_scope));
