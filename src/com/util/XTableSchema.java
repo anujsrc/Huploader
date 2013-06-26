@@ -2,7 +2,6 @@ package com.util;
 
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.awt.geom.Point2D.Double;
 
 import org.json.JSONArray;
 import org.json.JSONException;

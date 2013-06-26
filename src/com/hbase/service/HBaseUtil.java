@@ -22,6 +22,7 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.BinaryComparator;
+import org.apache.hadoop.hbase.filter.ColumnPrefixFilter;
 import org.apache.hadoop.hbase.filter.ColumnRangeFilter;
 import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
@@ -536,6 +537,9 @@ public class HBaseUtil {
 		return new ColumnRangeFilter(minColumn,minColumnInclusive,maxColumn,maxColumnInclusive);
 	}
 	
+	public Filter getColumnPrefixFilter(String prefix)throws Exception {
+		return new ColumnPrefixFilter(prefix.getBytes());
+	}
 	
 	public Filter getPrefixFilter(String prefix) throws Exception{		
 		return new PrefixFilter(prefix.getBytes());
@@ -650,7 +654,9 @@ public class HBaseUtil {
 					scan.addColumn(family[0].getBytes(),columns[i].getBytes());	
 					//System.out.println(family[i]+";"+columns[i]);
 				}	
-			}							
+			}else{
+				scan.addFamily(family[0].getBytes());				
+			}
 			
 		}catch(Exception e){
 			e.printStackTrace();
