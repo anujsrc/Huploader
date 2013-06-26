@@ -46,6 +46,7 @@ public class XQuadTree {
     	// shift the space to the first quadrant
     	if(offsetPoint != null){
     		this.offset = new Point2D.Double(offsetPoint.x,offsetPoint.y);  
+    		System.out.println("offset: "+this.offset.toString());
     		if(rect.x < 0 || rect.y < 0){
     			this.m_rect = new Rectangle2D.Double((rect.x + offsetPoint.x),(rect.y + offsetPoint.y),rect.width,rect.height);	
     		}else{
@@ -122,7 +123,7 @@ public class XQuadTree {
      * This is because the space is normalized, so the point should be normalized as well.
      * @return
      */
-    private double[] normalize(double x, double y){
+    public double[] normalize(double x, double y){
     	double[] result = new double[]{x,y};
     	if(this.offset != null){   		
     		if(x<0 || y < 0){
@@ -172,9 +173,10 @@ public class XQuadTree {
      * @return
      */  
     public XQuadTree locate(double x, double y) {
-    	double[] normalized = this.normalize(x, y);
-    	x = normalized[0];
-    	y = normalized[1];   	
+    	//double[] normalized = this.normalize(x, y);
+    	//System.out.println();
+    	//x = normalized[0];
+    	//y = normalized[1];   	
     	
         if (this.hasChild) {
             // check children
@@ -234,13 +236,14 @@ public class XQuadTree {
     /**
      * This is to find the subspace for the area which is defined by a point and a distance
      * Query: It is used to process the query which is to get the points within a certain distance of the given point 
+     * IMPORTANT: This is for hybrid index. so the normalization should be put before this function
      * @param item
      * @return the index(es) of subspaces
      */
     public List<XQuadTree> tileMatch(double x,double y, double radius){
-    	double[] normalized = this.normalize(x, y);
     	// fix this, because the given point should be the center point not the upper-left point
-    	Rectangle2D.Double rect = new Rectangle2D.Double(normalized[0]-radius,normalized[1]-radius,2*radius,2*radius);
+    	//Rectangle2D.Double rect = new Rectangle2D.Double(normalized[0]-radius,normalized[1]-radius,2*radius,2*radius);
+    	Rectangle2D.Double rect = new Rectangle2D.Double(x-radius,y-radius,2*radius,2*radius);
     	
         // If this quad doesn't intersect the items rectangle, do nothing
         if (!m_rect.intersects(rect)

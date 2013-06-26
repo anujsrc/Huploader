@@ -70,6 +70,7 @@ public abstract class XGrid {
      */
     protected double[] normalize(double x, double y){
     	double[] result = new double[]{x,y};
+    	System.out.println("the offset is : "+this.offset.toString());
     	if(this.offset != null){
     		if(x<0 || y < 0){
     			result[0] += this.offset.x;

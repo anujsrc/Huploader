@@ -20,7 +20,7 @@ public class X2DGrid extends XGrid{
      */  
     public XBox locate(double x, double y) {
     	double[] normalized = this.normalize(x, y);  
-    	//System.out.println("normalized: "+normalized[0]+";"+normalized[1]);
+    	System.out.println("original : "+x+":"+y+"|| "+"normalized: "+normalized[0]+";"+normalized[1]);
     	XBox box = this.intervalLocate(normalized[0], normalized[1]);
     	return box;
     }

@@ -6,11 +6,18 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
+
 import com.util.quadtree.trie.XQuadTree;
 import com.util.raster.X2DGrid;
 import com.util.raster.XBox;
 
 public class XHybridIndex {
+	
+	private static final Logger LOG=Logger.getLogger(XHybridIndex.class);
+	private static final Log CLOG=LogFactory.getLog(XHybridIndex.class);
 
 	private XQuadTree quadtree = null;
 	// the size of tile for the first level of quad tree 
@@ -25,7 +32,11 @@ public class XHybridIndex {
     						double cell_size){
     	
     	this.tile_size = tile_size;
-    	this.quadtree = new XQuadTree(rect,tile_size,offsetPoint);    	
+    	if(this.tile_size < 0){ // there can be no quadtree indexing
+    		this.quadtree =  new XQuadTree(rect,Double.MAX_VALUE,offsetPoint);
+    	}else{
+    		this.quadtree = new XQuadTree(rect,tile_size,offsetPoint);	
+    	}    	    	
     	this.cell_size = cell_size;
     	this.m_tiles = new HashMap<String,X2DGrid>();
     }
@@ -33,14 +44,13 @@ public class XHybridIndex {
      * build the index in the first level
      * @param coding
      */
-    public void buildZone(int coding){
-    	this.quadtree.buildTree(coding);
-    	//for debug
+    public void buildZone(int coding){    	
+    	this.quadtree.buildTree(coding);	    	
     	this.getTiles(this.quadtree);
     }
     
-    public void getTiles(XQuadTree treeNode){    	
-       	if(treeNode.getM_bl_child() == null){       		
+    public void getTiles(XQuadTree treeNode){
+       	if(!treeNode.isHasChild()){  // this is the leaf node     		
         	Rectangle2D.Double tile_rect = treeNode.getM_rect();
         	Point2D.Double offsetPoint = new Point2D.Double(tile_rect.getX(),tile_rect.getY());
         	X2DGrid grid = new X2DGrid(tile_rect,this.cell_size,offsetPoint); 
@@ -59,9 +69,15 @@ public class XHybridIndex {
      * @param y longitude of the location point
      * @return
      */  
-    public String[] locate(double x, double y) {    	
+    public String[] locate(double x, double y) {
+    	LOG.info("Entry: locate():"+x+";"+y);
+    	CLOG.info("Entry: locate():"+x+";"+y);
     	// filter the tile with quad tree first
+    	double normalized[] = this.quadtree.normalize(x, y);
+    	x = normalized[0];
+    	y = normalized[1];
     	XQuadTree tile = this.quadtree.locate(x, y);
+    	LOG.info("tile is "+tile.getIndex());
     	// get index in the first level
     	String tile_index = tile.getIndex();
     	X2DGrid grid = this.m_tiles.get(tile_index);
@@ -69,9 +85,14 @@ public class XHybridIndex {
     	// get the tile rect where the point is located
     	XBox box = grid.locate(x, y);
     	String[] indexes = new String[2];
-    	indexes[0] = tile_index+"-"+box.getRow();
+    	if(tile_index.isEmpty()){
+    		indexes[0] = box.getRow();
+    	}else{
+    		indexes[0] = tile_index+"-"+box.getRow();	
+    	}    	
     	indexes[1] = box.getColumn();   
-    	//System.out.println("row=> "+indexes[0]+";column=>"+indexes[1]);
+    	LOG.info("Locate: row=> "+indexes[0]+";column=>"+indexes[1]);
+    	CLOG.info("Locate: row=> "+indexes[0]+";column=>"+indexes[1]);
     	return indexes;    	
     } 
     /**
@@ -85,6 +106,9 @@ public class XHybridIndex {
      */    
     public Hashtable<String,XBox[]> match(double x, double y,double radius){
     	System.out.println("in updatedMatch./..."+x+";"+y);
+    	double normalized[] = this.quadtree.normalize(x, y);
+    	x = normalized[0];
+    	y = normalized[1];
     	Rectangle2D.Double matchRect = new Rectangle2D.Double(x-radius,y-radius,2*radius,2*radius);
     	List<XQuadTree> tiles = this.quadtree.tileMatch(x, y,radius);    	
     	Hashtable<String,XBox[]> result = null;    	

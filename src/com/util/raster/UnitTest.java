@@ -48,16 +48,17 @@ public class UnitTest {
 	}	
 	
 	public static void test2DGrid(){
-    	Rectangle2D.Double space = new Rectangle2D.Double(-90,-180,180,360);
-    	Point2D.Double offset = new Point2D.Double(90,180);
-    	X2DGrid raster = new X2DGrid(space,	10,offset); 
+    	Rectangle2D.Double space = new Rectangle2D.Double(0,0,1000,1000);
+    	Point2D.Double offset = null; //new Point2D.Double(90,180);
+    	X2DGrid raster = new X2DGrid(space,	0.01,offset); 
     	
     	raster.print();
     	
     	// get one point's index
-    	XBox box = raster.locate(-89,120);
+    	XBox box = raster.locate(239.5555,-23.3333);
     	System.out.println("============");
     	System.out.println(box.toString());
+    
     	
     	XBox[] boxes = raster.match(-89,120,100);
     	System.out.println("=============match...");
@@ -67,8 +68,8 @@ public class UnitTest {
 	
     public static void main(String args[]){
     	
-    	//UnitTest.test2DGrid();
-    	UnitTest.test3DGrid();
+    	UnitTest.test2DGrid();
+    	//UnitTest.test3DGrid();
     	
     	
     }
